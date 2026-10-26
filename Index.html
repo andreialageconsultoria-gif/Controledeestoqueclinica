@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controle de Estoque</title>
+<style>
+:root{
+  --navy:#243D71; --navy2:#1a2d55; --cream:#F8F1E9; --gold:#B8913A; --gold2:#d9b86a;
+  --bg:#F8F1E9; --card:#ffffff; --ink:#1f2633; --muted:#6b7385; --line:#e6ddd0;
+  --ok:#2e7d4f; --okbg:#e6f4ec; --warn:#a86b00; --warnbg:#fff4dc; --bad:#b3261e; --badbg:#fde8e6;
+  --radius:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Calibri,"Segoe UI",Carlito,Arial,sans-serif;font-size:15px;line-height:1.45}
+h1,h2,h3{font-family:Cambria,Georgia,"Times New Roman",serif;color:var(--navy);margin:0 0 .5em}
+h2{font-size:1.4rem}h3{font-size:1.1rem}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--gold2);border-color:var(--gold)}
+label{display:block;font-size:.82rem;color:var(--muted);margin:0 0 3px;font-weight:600}
+header{background:var(--navy);color:var(--cream);padding:14px 16px 0;position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;max-width:1200px;margin:0 auto}
+.brand{font-family:Cambria,Georgia,serif;font-size:1.25rem}
+.brand small{display:block;font-family:Calibri,Arial,sans-serif;font-size:.8rem;color:var(--gold2);letter-spacing:.04em}
+.clinic{font-size:.9rem;opacity:.9;text-align:right}
+.demo-tag{background:var(--gold);color:#fff;border-radius:20px;padding:2px 10px;font-size:.75rem;margin-left:6px}
+nav{display:flex;gap:4px;overflow-x:auto;max-width:1200px;margin:10px auto 0;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{background:transparent;border:0;color:var(--cream);opacity:.75;padding:10px 14px;border-bottom:3px solid transparent;white-space:nowrap}
+nav button.on{opacity:1;border-bottom-color:var(--gold2);font-weight:700}
+main{max-width:1200px;margin:0 auto;padding:18px 16px 60px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:800px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;border-top:4px solid var(--navy)}
+.kpi b{display:block;font-size:1.6rem;font-family:Cambria,Georgia,serif;color:var(--navy)}
+.kpi span{color:var(--muted);font-size:.85rem}
+.kpi.bad{border-top-color:var(--bad)}.kpi.warn{border-top-color:var(--gold)}.kpi.ok{border-top-color:var(--ok)}
+.btn{background:var(--navy);color:#fff;border:0;border-radius:8px;padding:9px 16px;font-weight:600}
+.btn:hover{background:var(--navy2)}
+.btn.gold{background:var(--gold)}.btn.gold:hover{background:#9c7a2f}
+.btn.ghost{background:transparent;color:var(--navy);border:1px solid var(--navy)}
+.btn.ghost:hover{background:#eef1f8}
+.btn.red{background:var(--bad)}
+.btn.sm{padding:5px 10px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.right{margin-left:auto}
+.methods{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media(max-width:900px){.methods{grid-template-columns:repeat(2,1fr)}}
+.method{background:#fff;border:2px solid var(--line);border-radius:var(--radius);padding:14px;text-align:left;min-height:96px}
+.method:hover{border-color:var(--gold)}
+.method b{display:block;color:var(--navy);font-size:1rem;margin-bottom:3px}
+.method span{font-size:.82rem;color:var(--muted)}
+.method i{font-style:normal;font-size:1.4rem;display:block;margin-bottom:4px}
+.tbl{width:100%;border-collapse:collapse;font-size:.9rem}
+.tbl th{background:var(--cream);color:var(--navy);text-align:left;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;font-weight:700}
+.tbl td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl td.n,.tbl th.n{text-align:right;white-space:nowrap}
+.tbl tr.click{cursor:pointer}.tbl tr.click:hover td{background:#fbf8f3}
+.scroll{overflow-x:auto}
+.tbl input,.tbl select{padding:6px 7px;min-width:90px}
+.pill{display:inline-block;border-radius:20px;padding:2px 10px;font-size:.78rem;font-weight:700;white-space:nowrap}
+.p-ok{background:var(--okbg);color:var(--ok)}.p-warn{background:var(--warnbg);color:var(--warn)}.p-bad{background:var(--badbg);color:var(--bad)}.p-mute{background:#eef0f4;color:var(--muted)}
+.muted{color:var(--muted)}.small{font-size:.82rem}
+.alert{border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:.9rem}
+.a-bad{background:var(--badbg);color:var(--bad)}.a-warn{background:var(--warnbg);color:var(--warn)}.a-info{background:#eaf0fb;color:var(--navy)}
+.empty{text-align:center;color:var(--muted);padding:24px}
+.hint{font-size:.8rem;color:var(--muted);margin-top:3px}
+.radio{display:flex;gap:6px}
+.radio button{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px}
+.radio button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+#modal{position:fixed;inset:0;background:rgba(20,28,50,.55);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:30px 12px;overflow-y:auto}
+#modal.on{display:flex}
+.mbox{background:#fff;border-radius:14px;max-width:640px;width:100%;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;z-index:80;display:none;max-width:90vw}
+#toast.err{background:var(--bad)}
+#loading{position:fixed;inset:0;background:rgba(248,241,233,.7);z-index:70;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--navy);font-weight:700}
+#loading.on{display:flex}
+.spin{width:38px;height:38px;border:4px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+#conexao{position:fixed;inset:0;background:var(--navy);z-index:60;display:none;align-items:center;justify-content:center;padding:16px}
+#conexao.on{display:flex}
+#conexao .mbox{max-width:460px}
+.anchor{font-family:Cambria,Georgia,serif;font-style:italic;color:var(--gold)}
+textarea.raw{font-family:Consolas,monospace;font-size:.78rem;min-height:110px}
+.sec-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.sec-title h2{margin:0}
+details summary{cursor:pointer;color:var(--navy);font-weight:600}
+@media print{
+  header,nav,.noprint,#toast,#modal{display:none!important}
+  body{background:#fff}
+  main{padding:0}
+  section{display:none!important}
+  section.print{display:block!important}
+  .card{border:0;padding:0;break-inside:avoid}
+  .printhead{display:block!important}
+}
+.printhead{display:none;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <div class="brand">Controle de Estoque<small>ANDRÉIA LAGE CONSULTORIA COMERCIAL</small></div>
+    <div class="clinic"><span id="hdrClinica"></span><span id="hdrDemo"></span></div>
+  </div>
+  <nav id="nav">
+    <button data-tab="painel" class="on">Painel</button>
+    <button data-tab="entrada">Entrada</button>
+    <button data-tab="saida">Saída / Baixa</button>
+    <button data-tab="estoque">Estoque</button>
+    <button data-tab="relatorios">Relatórios e Compras</button>
+    <button data-tab="cadastros">Cadastros</button>
+    <button data-tab="config">Configurações</button>
+  </nav>
+</header>
+
+<main>
+  <section id="painel" class="on"></section>
+  <section id="entrada"></section>
+  <section id="saida"></section>
+  <section id="estoque"></section>
+  <section id="relatorios"></section>
+  <section id="cadastros"></section>
+  <section id="config"></section>
+</main>
+
+<div id="modal"><div class="mbox" id="mbox"></div></div>
+<div id="toast"></div>
+<div id="loading"><div class="spin"></div><div id="loadingMsg">Carregando...</div></div>
+
+<div id="conexao">
+  <div class="mbox">
+    <h2>Controle de Estoque</h2>
+    <p class="muted small">Conecte a planilha da sua clínica. A URL e o PIN são fornecidos na implantação.</p>
+    <div id="conErro"></div>
+    <label>URL da planilha (termina em /exec)</label>
+    <input id="conUrl" placeholder="https://script.google.com/macros/s/.../exec">
+    <div style="height:10px"></div>
+    <label>PIN</label>
+    <input id="conPin" type="password" inputmode="numeric">
+    <div style="height:14px"></div>
+    <div class="row">
+      <button class="btn" onclick="conectar()">Conectar</button>
+      <button class="btn ghost right" onclick="entrarDemo()">Ver demonstração</button>
+    </div>
+    <p class="small muted" style="margin-top:16px">A demonstração usa dados fictícios salvos só neste navegador.</p>
+    <p class="anchor" style="margin:10px 0 0">Não se convence. Se conduz.</p>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONSTANTES
+   ========================================================= */
+const APRESENTACOES = ['Frasco','Ampola','Implante','Seringa preenchida','Caneta','Cápsula','Comprimido','Sachê','Bisnaga','Unidade','Caixa','Pacote'];
+const CATEGORIAS = ['Medicamento','Suplemento','Insumo'];
+const MOTIVOS = ['Uso em paciente','Avaria','Perda','Vencimento','Ajuste de inventário'];
+const MOTIVOS_CONSUMO = ['Uso em paciente','Avaria','Perda'];
+const MOTIVOS_PERDA = ['Avaria','Perda','Vencimento'];
+const LS_CON = 'estoqueAL_conexao', LS_DEMO = 'estoqueAL_demo';
+
+let conn = {url:'', pin:'', demo:false};
+let S = {config:{}, farmacias:[], itens:[], lotes:[], movimentos:[]};
+let tabAtual = 'painel';
+
+/* =========================================================
+   UTILITÁRIOS
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const num = v => { if (v === null || v === undefined || v === '') return 0; if (typeof v === 'number') return v; let s = String(v).trim().replace(/\s/g,''); if (s.includes(',')) s = s.replace(/\./g,'').replace(',', '.'); const n = parseFloat(s); return isNaN(n) ? 0 : n; };
+const brCont = it => it ? br(num(it.conteudoPadrao)) : '';
+// numBR: número digitado por pessoas (1.000 = mil; 2,5 = dois e meio). num: valor gravado (ponto decimal).
+const numBR = v => { if (typeof v === 'number') return v; let s = String(v ?? '').trim().replace(/\s/g,''); if (!s) return 0; if (s.includes(',')) s = s.replace(/\./g,'').replace(',', '.'); else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,''); const n = parseFloat(s); return isNaN(n) ? 0 : n; };
+const br = n => n === '' || n === null || n === undefined ? '' : String(Math.round(Number(n) * 1000) / 1000).replace('.', ',');
+const hoje = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const addDias = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const diasAte = iso => iso ? Math.round((Date.parse(iso + 'T12:00:00') - Date.parse(hoje() + 'T12:00:00')) / 86400000) : 99999;
+const fmtData = iso => { if (!iso) return ''; const p = String(iso).slice(0,10).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso; };
+const fmtNum = (n, d = 2) => Number(n || 0).toLocaleString('pt-BR', {maximumFractionDigits: d});
+const fmtR = n => Number(n || 0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
+const lsGet = k => { try { return localStorage.getItem(k); } catch(e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch(e) {} };
+const lsDel = k => { try { localStorage.removeItem(k); } catch(e) {} };
+const sum = (arr, f) => arr.reduce((a, x) => a + (f ? f(x) : x), 0);
+
+function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.className = err ? 'err' : ''; t.style.display = 'block'; clearTimeout(t._t); t._t = setTimeout(() => t.style.display = 'none', err ? 5000 : 2600); }
+function loading(on, msg) { $('loading').classList.toggle('on', !!on); $('loadingMsg').textContent = msg || 'Carregando...'; }
+function abrirModal(html) { $('mbox').innerHTML = html; $('modal').classList.add('on'); }
+function fecharModal() { $('modal').classList.remove('on'); }
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal') fecharModal(); });
+
+const scriptsCarregados = {};
+function carregarScript(src) {
+  if (!scriptsCarregados[src]) scriptsCarregados[src] = new Promise((ok, falha) => {
+    const s = document.createElement('script'); s.src = src; s.onload = ok;
+    s.onerror = () => { delete scriptsCarregados[src]; falha(new Error('Sem internet para carregar o leitor.')); };
+    document.head.appendChild(s);
+  });
+  return scriptsCarregados[src];
+}
+
+/* =========================================================
+   API (planilha) e MODO DEMONSTRAÇÃO
+   ========================================================= */
+async function api(action, payload = {}) {
+  if (conn.demo) return demoApi(action, payload);
+  const r = await fetch(conn.url, {method:'POST', body: JSON.stringify(Object.assign({action, pin: conn.pin}, payload))});
+  const j = await r.json();
+  if (!j.ok) {
+    if (j.pin) { mostrarConexao(conn.pin ? 'PIN incorreto.' : 'Informe o PIN da clínica.'); }
+    throw new Error(j.erro || 'Erro na planilha.');
+  }
+  return j;
+}
+
+function demoDB() { const raw = lsGet(LS_DEMO); if (raw) { try { return JSON.parse(raw); } catch(e) {} } const db = gerarDemo(); lsSet(LS_DEMO, JSON.stringify(db)); return db; }
+function demoSalvar(db) { lsSet(LS_DEMO, JSON.stringify(db)); }
+const TAB_KEY = {Farmacias:'farmacias', Itens:'itens', Lotes:'lotes', Movimentos:'movimentos'};
+async function demoApi(action, p) {
+  const db = demoDB();
+  if (action === 'load') return {ok:true, dados: JSON.parse(JSON.stringify(db))};
+  if (action === 'insertMany') { db[TAB_KEY[p.table]].push(...p.rows); demoSalvar(db); return {ok:true}; }
+  if (action === 'upsert') { const arr = db[TAB_KEY[p.table]]; const i = arr.findIndex(x => x.id === p.row.id); if (i >= 0) arr[i] = p.row; else arr.push(p.row); demoSalvar(db); return {ok:true}; }
+  if (action === 'remove') {
+    if (p.table === 'Lotes' && db.movimentos.some(m => m.loteId === p.id)) throw new Error('Este lote já tem saídas. Exclua as saídas antes.');
+    const k = TAB_KEY[p.table]; db[k] = db[k].filter(x => x.id !== p.id); demoSalvar(db); return {ok:true};
+  }
+  if (action === 'saveConfig') { Object.assign(db.config, p.config); demoSalvar(db); return {ok:true}; }
+  throw new Error('Ação desconhecida.');
+}
+
+function gerarDemo() {
+  const H = hoje();
+  const fA = {id:'fA', nome:'Farmácia de Manipulação Exemplo', cnpj:'', intervaloEntregaDias:'15', prazoMedioDias:'7', contato:'(31) 90000-0000', ativo:'1'};
+  const fB = {id:'fB', nome:'Distribuidora Hospitalar Exemplo', cnpj:'', intervaloEntregaDias:'30', prazoMedioDias:'5', contato:'', ativo:'1'};
+  const itens = [
+    {id:'i1', substancia:'Tirzepatida', apresentacao:'Frasco', unidadeControle:'mg', conteudoPadrao:'60', categoria:'Medicamento', farmaciaPadraoId:'fA', estoqueMinimo:'60', apelidos:'', ativo:'1', intervaloEntregaDias:'30', prazoEntregaDias:'20'},
+    {id:'i7', substancia:'Gestrinona', apresentacao:'Implante', unidadeControle:'un', conteudoPadrao:'1', categoria:'Medicamento', farmaciaPadraoId:'fA', estoqueMinimo:'2', apelidos:'', ativo:'1', intervaloEntregaDias:'30', prazoEntregaDias:'30'},
+    {id:'i2', substancia:'Vitamina B12 (Metilcobalamina)', apresentacao:'Ampola', unidadeControle:'un', conteudoPadrao:'1', categoria:'Medicamento', farmaciaPadraoId:'fA', estoqueMinimo:'10', apelidos:'', ativo:'1'},
+    {id:'i3', substancia:'NAD+', apresentacao:'Frasco', unidadeControle:'mg', conteudoPadrao:'500', categoria:'Medicamento', farmaciaPadraoId:'fA', estoqueMinimo:'0', apelidos:'', ativo:'1'},
+    {id:'i4', substancia:'Seringa 1 mL com agulha', apresentacao:'Unidade', unidadeControle:'un', conteudoPadrao:'1', categoria:'Insumo', farmaciaPadraoId:'fB', estoqueMinimo:'50', apelidos:'', ativo:'1'},
+    {id:'i5', substancia:'Ômega 3 1000 mg', apresentacao:'Cápsula', unidadeControle:'un', conteudoPadrao:'1', categoria:'Suplemento', farmaciaPadraoId:'fA', estoqueMinimo:'0', apelidos:'', ativo:'1'},
+    {id:'i6', substancia:'Vitamina D3', apresentacao:'Frasco', unidadeControle:'UI', conteudoPadrao:'600000', categoria:'Medicamento', farmaciaPadraoId:'fA', estoqueMinimo:'0', apelidos:'', ativo:'1'}
+  ];
+  const L = (id, itemId, lote, dEnt, val, fId, emb, cont, valor) => ({id, itemId, lote, validade:addDias(H,val), fabricacao:addDias(H,dEnt-5), farmaciaId:fId, dataEntrada:addDias(H,dEnt), qtdEmbalagens:String(emb), conteudoPorEmbalagem:String(cont), quantidadeTotal:String(emb*cont), valorTotal:String(valor), documento:'Pedido demo', origem:'Manual', responsavel:'Recepção', obs:'', registradoEm:addDias(H,dEnt)});
+  const lotes = [
+    L('l1','i1','TZ2401',-90,60,'fA',4,60,4800), L('l2','i1','TZ2409',-30,150,'fA',3,60,3600),
+    L('l3','i2','B12-778',-70,20,'fA',20,1,180),
+    L('l4','i3','NAD-031',-120,-5,'fA',2,500,1400),
+    L('l5','i4','SER-5521',-60,700,'fB',200,1,160),
+    L('l6','i5','OM3-118',-45,300,'fA',120,1,96),
+    L('l7','i6','VD-0912',-20,400,'fA',2,600000,240),
+    L('l8','i7','IMP-221',-50,250,'fA',8,1,2400)
+  ];
+  const movs = [];
+  const saldo = {}; lotes.forEach(l => saldo[l.id] = num(l.quantidadeTotal));
+  const baixa = (itemId, d, q, motivo) => {
+    const ls = lotes.filter(l => l.itemId === itemId && l.dataEntrada <= addDias(H,d) && saldo[l.id] > 0).sort((a,b) => a.validade.localeCompare(b.validade));
+    for (const l of ls) { if (q <= 0) break; const t = Math.min(q, saldo[l.id]); saldo[l.id] -= t; q -= t;
+      movs.push({id:uid(), data:addDias(H,d), loteId:l.id, itemId, motivo, quantidade:String(t), paciente: motivo === 'Uso em paciente' ? 'PR-' + (1000 + movs.length) : '', responsavel:'Enfermagem', obs:'', registradoEm:addDias(H,d)}); }
+  };
+  for (let d = -88; d <= -1; d += 3) baixa('i1', d, d % 2 ? 7.5 : 5, 'Uso em paciente');
+  for (let d = -68; d <= -1; d += 5) baixa('i2', d, 1, 'Uso em paciente');
+  baixa('i2', -40, 1, 'Avaria');
+  for (let d = -110; d <= -20; d += 15) baixa('i3', d, 100, 'Uso em paciente');
+  for (let d = -58; d <= -1; d += 1) baixa('i4', d, 3, 'Uso em paciente');
+  baixa('i4', -30, 4, 'Avaria');
+  for (let d = -40; d <= -1; d += 4) baixa('i5', d, 2, 'Uso em paciente');
+  for (let d = -18; d <= -1; d += 6) baixa('i6', d, 100000, 'Uso em paciente');
+  for (let d = -45; d <= -1; d += 9) baixa('i7', d, 1, 'Uso em paciente');
+  return {config:{nomeClinica:'Clínica Demonstração', diasSeguranca:'7', alertaVencimentoDias:'60', diasAnaliseConsumo:'90', responsaveis:'Recepção, Enfermagem, Dra. Ana'}, farmacias:[fA,fB], itens, lotes, movimentos:movs};
+}
+
+/* =========================================================
+   CONEXÃO E CARGA
+   ========================================================= */
+function mostrarConexao(erro) {
+  $('conexao').classList.add('on');
+  $('conUrl').value = conn.url || ''; $('conPin').value = '';
+  $('conErro').innerHTML = erro ? `<div class="alert a-bad">${esc(erro)}</div>` : '';
+}
+async function conectar() {
+  const url = $('conUrl').value.trim(), pin = $('conPin').value.trim();
+  if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) { $('conErro').innerHTML = '<div class="alert a-bad">Cole a URL completa da implantação, terminando em /exec.</div>'; return; }
+  conn = {url, pin, demo:false};
+  try { await carregar(); lsSet(LS_CON, JSON.stringify(conn)); $('conexao').classList.remove('on'); }
+  catch(e) { if (!$('conexao').classList.contains('on') || !/PIN/.test(e.message)) mostrarConexao(e.message); }
+}
+async function entrarDemo() { conn = {url:'', pin:'', demo:true}; lsSet(LS_CON, JSON.stringify(conn)); $('conexao').classList.remove('on'); await carregar(); }
+function sair() { lsDel(LS_CON); conn = {url:'', pin:'', demo:false}; mostrarConexao(); }
+
+async function carregar() {
+  loading(true, 'Carregando estoque...');
+  try {
+    const j = await api('load');
+    S = Object.assign({config:{}, farmacias:[], itens:[], lotes:[], movimentos:[]}, j.dados);
+    $('hdrClinica').textContent = S.config.nomeClinica || '';
+    $('hdrDemo').innerHTML = conn.demo ? '<span class="demo-tag">DEMONSTRAÇÃO</span>' : '';
+    renderTudo();
+  } finally { loading(false); }
+}
+
+/* =========================================================
+   CÁLCULOS
+   ========================================================= */
+const cfgN = (k, d) => { const v = num(S.config[k]); return v > 0 ? v : d; };
+const item = id => S.itens.find(i => i.id === id);
+const farm = id => S.farmacias.find(f => f.id === id);
+const ehFrasco = it => it && it.apresentacao === 'Frasco' && ['mg','UI','mL'].includes(it.unidadeControle);
+const unid = it => it && ['mg','UI','mL'].includes(it.unidadeControle) ? it.unidadeControle : 'un';
+const nomeItem = it => !it ? '(item excluído)' : `${it.substancia} | ${it.apresentacao}${ehFrasco(it) ? ' ' + fmtNum(num(it.conteudoPadrao)) + ' ' + it.unidadeControle : ''}`;
+function fmtQtd(it, q) {
+  let s = `${fmtNum(q)} ${unid(it)}`;
+  if (ehFrasco(it) && num(it.conteudoPadrao) > 0) s += ` <span class="muted small">(${fmtNum(q / num(it.conteudoPadrao), 1)} fr)</span>`;
+  return s;
+}
+function saidasLote(loteId) { return sum(S.movimentos.filter(m => m.loteId === loteId), m => num(m.quantidade)); }
+function saldoLote(l) { return Math.round((num(l.quantidadeTotal) - saidasLote(l.id)) * 1000) / 1000; }
+function custoUnit(l) { const q = num(l.quantidadeTotal); return q > 0 ? num(l.valorTotal) / q : 0; }
+function lotesItem(id, soComSaldo) { return S.lotes.filter(l => l.itemId === id && (!soComSaldo || saldoLote(l) > 0)).sort((a,b) => (a.validade || '9').localeCompare(b.validade || '9')); }
+function saldoItem(id, soValidos) { return sum(lotesItem(id, true).filter(l => !soValidos || diasAte(l.validade) >= 0), l => saldoLote(l)); }
+function valorEstoqueItem(id) { return sum(lotesItem(id, true), l => saldoLote(l) * custoUnit(l)); }
+
+function consumoDiario(it) {
+  const N = cfgN('diasAnaliseConsumo', 90), ini = addDias(hoje(), -N);
+  const movs = S.movimentos.filter(m => m.itemId === it.id && m.data >= ini && MOTIVOS_CONSUMO.includes(m.motivo));
+  const consumo = sum(movs, m => num(m.quantidade));
+  const datas = S.lotes.filter(l => l.itemId === it.id).map(l => l.dataEntrada).concat(S.movimentos.filter(m => m.itemId === it.id).map(m => m.data)).filter(Boolean).sort();
+  let base = N;
+  if (datas.length) base = Math.max(7, Math.min(N, -diasAte(datas[0])));
+  return {cd: consumo / base, consumo, base};
+}
+
+function riscoVencimento(it, cd) {
+  if (!(cd > 0)) return 0;
+  let t = 0, risco = 0;
+  for (const l of lotesItem(it.id, true)) {
+    const s = saldoLote(l), d = diasAte(l.validade);
+    if (d < 0) continue;
+    const consumivel = cd * Math.max(0, d - t);
+    if (s > consumivel) { risco += s - consumivel; t = Math.max(t, d); } else t += s / cd;
+  }
+  return risco;
+}
+
+function sugestao(it) {
+  const {cd, consumo, base} = consumoDiario(it);
+  const ultimo = lotesItem(it.id).slice(-1)[0];
+  const f = farm(it.farmaciaPadraoId) || (ultimo && farm(ultimo.farmaciaId));
+  // Prazo e intervalo do próprio item (ex.: Tirzepatida, implantes) têm prioridade sobre os da farmácia
+  const iItem = num(it.intervaloEntregaDias), pItem = num(it.prazoEntregaDias);
+  const I = iItem > 0 ? iItem : (f && num(f.intervaloEntregaDias) > 0 ? num(f.intervaloEntregaDias) : 30);
+  const P = pItem > 0 ? pItem : (f && num(f.prazoMedioDias) > 0 ? num(f.prazoMedioDias) : 7);
+  const proprio = iItem > 0 || pItem > 0;
+  const padrao = !(iItem > 0 || (f && num(f.intervaloEntregaDias) > 0)) || !(pItem > 0 || (f && num(f.prazoMedioDias) > 0));
+  const diasSeg = cfgN('diasSeguranca', 7);
+  const seg = cd * diasSeg, minimo = num(it.estoqueMinimo);
+  const saldoV = saldoItem(it.id, true);
+  const alvo = Math.max(cd * (I + P) + seg, minimo);
+  const qtd = Math.max(0, alvo - saldoV);
+  const cont = num(it.conteudoPadrao) > 0 ? num(it.conteudoPadrao) : 1;
+  const emb = qtd > 0 ? Math.ceil(qtd / cont - 1e-9) : 0;
+  const ponto = Math.max(cd * P + seg, minimo);
+  const cobertura = cd > 0 ? saldoV / cd : Infinity;
+  let status;
+  if (cd === 0 && minimo === 0) status = saldoV > 0 ? 'Sem consumo' : 'Sem estoque';
+  else if (saldoV <= 0) status = 'Sem estoque';
+  else if (saldoV <= ponto) status = 'Comprar agora';
+  else if (emb > 0) status = 'Próximo pedido';
+  else status = 'OK';
+  const ruptura = cd > 0 && isFinite(cobertura) ? addDias(hoje(), Math.floor(cobertura)) : '';
+  return {cd, consumo, base, f, I, P, padrao, proprio, seg, saldoV, alvo, qtd, emb, cont, ponto, cobertura, status, ruptura, risco: riscoVencimento(it, cd)};
+}
+function pillStatus(s) {
+  const c = {'Sem estoque':'p-bad', 'Comprar agora':'p-bad', 'Próximo pedido':'p-warn', 'OK':'p-ok', 'Sem consumo':'p-mute'}[s] || 'p-mute';
+  return `<span class="pill ${c}">${s}</span>`;
+}
+function pillVenc(iso) {
+  const d = diasAte(iso), lim = cfgN('alertaVencimentoDias', 60);
+  if (!iso) return '<span class="pill p-mute">sem validade</span>';
+  if (d < 0) return `<span class="pill p-bad">vencido ${fmtData(iso)}</span>`;
+  if (d <= lim) return `<span class="pill p-warn">${fmtData(iso)} (${d}d)</span>`;
+  return `<span class="pill p-ok">${fmtData(iso)}</span>`;
+}
+
+/* =========================================================
+   NAVEGAÇÃO
+   ========================================================= */
+$('nav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) irPara(b.dataset.tab); });
+function irPara(tab) {
+  tabAtual = tab;
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id === tab));
+  render(tab); window.scrollTo(0, 0);
+}
+function renderTudo() { render(tabAtual); }
+function render(tab) { ({painel:renderPainel, entrada:renderEntrada, saida:renderSaida, estoque:renderEstoque, relatorios:renderRelatorios, cadastros:renderCadastros, config:renderConfig})[tab](); }
+
+/* =========================================================
+   PAINEL
+   ========================================================= */
+function renderPainel() {
+  const lim = cfgN('alertaVencimentoDias', 60);
+  const ativos = S.itens.filter(i => i.ativo !== '0');
+  const lotesSaldo = S.lotes.filter(l => saldoLote(l) > 0);
+  const vencidos = lotesSaldo.filter(l => diasAte(l.validade) < 0);
+  const vencendo = lotesSaldo.filter(l => { const d = diasAte(l.validade); return d >= 0 && d <= lim; });
+  const sugs = ativos.map(it => ({it, s: sugestao(it)}));
+  const comprar = sugs.filter(x => ['Comprar agora','Sem estoque'].includes(x.s.status) && x.s.status !== 'Sem consumo' && (x.s.cd > 0 || num(x.it.estoqueMinimo) > 0));
+  const riscos = sugs.filter(x => x.s.risco > 0);
+  const valor = sum(lotesSaldo, l => saldoLote(l) * custoUnit(l));
+  const ini30 = addDias(hoje(), -30);
+  const perdas30 = sum(S.movimentos.filter(m => m.data >= ini30 && MOTIVOS_PERDA.includes(m.motivo)), m => { const l = S.lotes.find(x => x.id === m.loteId); return l ? num(m.quantidade) * custoUnit(l) : 0; });
+
+  $('painel').innerHTML = `
+  <div class="sec-title"><h2>Painel</h2><span class="muted small">Atualizado em ${fmtData(hoje())}</span>
+    <div class="row right noprint"><button class="btn gold" onclick="irPara('entrada')">+ Entrada</button><button class="btn" onclick="irPara('saida')">− Saída</button></div></div>
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="kpi"><b>${fmtR(valor)}</b><span>valor em estoque</span></div>
+    <div class="kpi ${comprar.length ? 'bad' : 'ok'}"><b>${comprar.length}</b><span>itens para comprar agora</span></div>
+    <div class="kpi ${vencidos.length ? 'bad' : vencendo.length ? 'warn' : 'ok'}"><b>${vencidos.length} / ${vencendo.length}</b><span>lotes vencidos / vencendo em ${lim} dias</span></div>
+    <div class="kpi ${perdas30 > 0 ? 'warn' : 'ok'}"><b>${fmtR(perdas30)}</b><span>perdas nos últimos 30 dias</span></div>
+  </div>
+  ${vencidos.length ? `<div class="card"><div class="sec-title"><h3 style="margin:0">Lotes vencidos com saldo</h3><button class="btn red sm right" onclick="modalBaixaVencidos()">Dar baixa por vencimento</button></div>
+    <div class="scroll"><table class="tbl"><tr><th>Item</th><th>Lote</th><th>Validade</th><th class="n">Saldo</th><th class="n">Valor</th></tr>
+    ${vencidos.map(l => { const it = item(l.itemId); return `<tr><td>${esc(nomeItem(it))}</td><td>${esc(l.lote)}</td><td>${pillVenc(l.validade)}</td><td class="n">${fmtQtd(it, saldoLote(l))}</td><td class="n">${fmtR(saldoLote(l) * custoUnit(l))}</td></tr>`; }).join('')}</table></div></div>` : ''}
+  ${comprar.length ? `<div class="card"><div class="sec-title"><h3 style="margin:0">Comprar agora</h3><button class="btn ghost sm right" onclick="irPara('relatorios')">Ver sugestão completa</button></div>
+    <div class="scroll"><table class="tbl"><tr><th>Item</th><th class="n">Saldo válido</th><th class="n">Dura até</th><th class="n">Sugestão</th><th>Farmácia</th></tr>
+    ${comprar.map(({it, s}) => `<tr><td>${esc(nomeItem(it))} ${pillStatus(s.status)}</td><td class="n">${fmtQtd(it, s.saldoV)}</td><td class="n">${s.ruptura ? fmtData(s.ruptura) : '-'}</td><td class="n"><b>${fmtNum(s.emb, 0)} ${esc(it.apresentacao.toLowerCase())}(s)</b>${ehFrasco(it) ? `<div class="small muted">${fmtNum(s.emb * s.cont)} ${it.unidadeControle}</div>` : ''}</td><td>${esc(s.f ? s.f.nome : '-')}</td></tr>`).join('')}</table></div></div>` : ''}
+  ${vencendo.length ? `<div class="card"><h3>Vencendo em até ${lim} dias</h3><div class="scroll"><table class="tbl"><tr><th>Item</th><th>Lote</th><th>Validade</th><th class="n">Saldo</th></tr>
+    ${vencendo.sort((a,b) => a.validade.localeCompare(b.validade)).map(l => { const it = item(l.itemId); return `<tr><td>${esc(nomeItem(it))}</td><td>${esc(l.lote)}</td><td>${pillVenc(l.validade)}</td><td class="n">${fmtQtd(it, saldoLote(l))}</td></tr>`; }).join('')}</table></div></div>` : ''}
+  ${riscos.length ? `<div class="card"><h3>Risco de perda por vencimento</h3><p class="small muted">Pelo ritmo atual de uso, esta quantidade não será consumida antes de vencer. Vale priorizar o uso ou evitar novas compras.</p>
+    <div class="scroll"><table class="tbl"><tr><th>Item</th><th class="n">Pode vencer</th><th class="n">Valor estimado</th></tr>
+    ${riscos.map(({it, s}) => { const cu = valorEstoqueItem(it.id) / (saldoItem(it.id) || 1); return `<tr><td>${esc(nomeItem(it))}</td><td class="n">${fmtQtd(it, s.risco)}</td><td class="n">${fmtR(s.risco * cu)}</td></tr>`; }).join('')}</table></div></div>` : ''}
+  ${!S.itens.length ? `<div class="card empty">Nenhum item cadastrado ainda.<br><br><button class="btn" onclick="irPara('cadastros')">Cadastrar itens e farmácias</button></div>` : ''}
+  ${S.itens.length && !vencidos.length && !comprar.length && !vencendo.length && !riscos.length ? '<div class="card empty">Tudo em ordem por aqui.</div>' : ''}`;
+}
+
+function modalBaixaVencidos() {
+  const vencidos = S.lotes.filter(l => saldoLote(l) > 0 && diasAte(l.validade) < 0);
+  abrirModal(`<h3>Baixa por vencimento</h3><p class="small muted">Será registrada uma saída com motivo "Vencimento" para todo o saldo destes lotes.</p>
+  <table class="tbl"><tr><th>Item</th><th>Lote</th><th class="n">Saldo</th></tr>${vencidos.map(l => { const it = item(l.itemId); return `<tr><td>${esc(nomeItem(it))}</td><td>${esc(l.lote)}</td><td class="n">${fmtQtd(it, saldoLote(l))}</td></tr>`; }).join('')}</table>
+  <div style="height:10px"></div><label>Responsável</label><input id="bvResp" list="dlResp" value="">
+  ${datalistResp()}
+  <div class="row" style="margin-top:14px"><button class="btn red" onclick="confirmarBaixaVencidos()">Confirmar baixa</button><button class="btn ghost" onclick="fecharModal()">Cancelar</button></div>`);
+}
+async function confirmarBaixaVencidos() {
+  const resp = $('bvResp').value.trim();
+  if (!resp) { toast('Informe o responsável.', 1); return; }
+  const rows = S.lotes.filter(l => saldoLote(l) > 0 && diasAte(l.validade) < 0).map(l => ({id:uid(), data:hoje(), loteId:l.id, itemId:l.itemId, motivo:'Vencimento', quantidade:String(saldoLote(l)), paciente:'', responsavel:resp, obs:'Baixa automática de vencidos', registradoEm:new Date().toISOString()}));
+  fecharModal(); loading(true, 'Registrando baixas...');
+  try { await api('insertMany', {table:'Movimentos', rows}); toast(`${rows.length} lote(s) baixado(s).`); await carregar(); }
+  catch(e) { loading(false); toast(e.message, 1); }
+}
+function datalistResp() { const r = String(S.config.responsaveis || '').split(',').map(s => s.trim()).filter(Boolean); return `<datalist id="dlResp">${r.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`; }
+function optsFarmacias(sel, vazio = 'Selecione') { return `<option value="">${vazio}</option>` + S.farmacias.filter(f => f.ativo !== '0' || f.id === sel).sort((a,b) => a.nome.localeCompare(b.nome)).map(f => `<option value="${f.id}" ${f.id === sel ? 'selected' : ''}>${esc(f.nome)}</option>`).join(''); }
+function optsItens(sel) { return '<option value="">Selecione o item</option>' + S.itens.filter(i => i.ativo !== '0' || i.id === sel).sort((a,b) => nomeItem(a).localeCompare(nomeItem(b))).map(i => `<option value="${i.id}" ${i.id === sel ? 'selected' : ''}>${esc(nomeItem(i))}</option>`).join(''); }
+
+/* =========================================================
+   ENTRADA
+   ========================================================= */
+let E = null;
+function novaEntrada(origem) {
+  E = {origem, farmaciaId:'', farmaciaNova:'', farmaciaCnpj:'', documento:'', data:hoje(), responsavel:'', valorDocumento:'', textoBruto:'', aviso:'', linhas:[]};
+}
+function novaLinha(p = {}) {
+  return Object.assign({k:uid(), itemId:'', lote:'', validade:'', fabricacao:'', embalagens:'', conteudo:'', valor:'', chave:'', descricao:''}, p);
+}
+
+function renderEntrada() {
+  if (!E) {
+    $('entrada').innerHTML = `
+    <div class="sec-title"><h2>Entrada no estoque</h2></div>
+    <p class="muted">Escolha como a entrada vai ser feita. Em todos os casos você confere os dados antes de gravar.</p>
+    <div class="methods">
+      <button class="method" onclick="iniciarXML()"><i>🧾</i><b>XML da nota</b><span>NF-e de produto. Lê itens, lote e validade automaticamente.</span></button>
+      <button class="method" onclick="iniciarArquivo('pdf')"><i>📄</i><b>PDF do pedido</b><span>Pedido ou nota de serviço da manipulação.</span></button>
+      <button class="method" onclick="iniciarArquivo('foto')"><i>📷</i><b>Foto do rótulo</b><span>Lê o texto da etiqueta. Confira os campos.</span></button>
+      <button class="method" onclick="iniciarArquivo('codigo')"><i>▦</i><b>Código do produto</b><span>Código quadradinho ou de barras do medicamento industrializado.</span></button>
+      <button class="method" onclick="iniciarManual()"><i>✍️</i><b>Manual</b><span>Lançamento rápido com itens já cadastrados.</span></button>
+    </div>
+    <input type="file" id="fileXml" accept=".xml,text/xml,application/xml" hidden multiple onchange="lerXML(this.files)">
+    <input type="file" id="filePdf" accept="application/pdf,.pdf" hidden onchange="lerPDF(this.files[0])">
+    <input type="file" id="fileFoto" accept="image/*" capture="environment" hidden onchange="lerFoto(this.files[0])">
+    <input type="file" id="fileCodigo" accept="image/*" capture="environment" hidden onchange="lerCodigo(this.files[0])">
+    <div class="card" style="margin-top:16px"><h3>Últimas entradas</h3>${tabelaUltimasEntradas()}</div>`;
+    return;
+  }
+  const origemNome = {XML:'XML da nota', PDF:'PDF do pedido', Foto:'Foto do rótulo', Codigo:'Código do produto', Manual:'Manual'}[E.origem];
+  $('entrada').innerHTML = `
+  <div class="sec-title"><h2>Conferir entrada</h2><span class="pill p-mute">${origemNome}</span>
+    <div class="row right"><button class="btn ghost sm" onclick="E=null;renderEntrada()">Cancelar</button></div></div>
+  ${E.aviso ? `<div class="alert a-warn">${E.aviso}</div>` : ''}
+  <div class="card">
+    <div class="grid g4">
+      <div><label>Farmácia / fornecedor</label><select onchange="E.farmaciaId=this.value;E.farmaciaNova='';renderEntrada()">${optsFarmacias(E.farmaciaId)}</select>
+        ${!E.farmaciaId ? `<input style="margin-top:6px" placeholder="ou digite uma nova" value="${esc(E.farmaciaNova)}" oninput="E.farmaciaNova=this.value">` : ''}</div>
+      <div><label>Nº da nota / pedido</label><input value="${esc(E.documento)}" oninput="E.documento=this.value"></div>
+      <div><label>Data da entrada</label><input type="date" value="${E.data}" oninput="E.data=this.value"></div>
+      <div><label>Recebido por</label><input list="dlResp" value="${esc(E.responsavel)}" oninput="E.responsavel=this.value">${datalistResp()}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-title"><h3 style="margin:0">Itens recebidos</h3><div class="row right">
+      ${E.origem === 'Codigo' ? '<button class="btn gold sm" onclick="$(\'fileCodigo\').value=\'\';$(\'fileCodigo\').click()">+ Ler outro código</button>' : ''}
+      ${E.origem === 'Foto' ? '<button class="btn gold sm" onclick="$(\'fileFoto\').value=\'\';$(\'fileFoto\').click()">+ Ler outro rótulo</button>' : ''}
+      <button class="btn ghost sm" onclick="E.linhas.push(novaLinha());renderEntrada()">+ Linha</button>
+      <button class="btn ghost sm" onclick="modalItem()">+ Cadastrar item</button></div></div>
+    <input type="file" id="fileFoto" accept="image/*" capture="environment" hidden onchange="lerFoto(this.files[0], true)">
+    <input type="file" id="fileCodigo" accept="image/*" capture="environment" hidden onchange="lerCodigo(this.files[0], true)">
+    ${E.linhas.length ? E.linhas.map((l, i) => linhaEntradaHTML(l, i)).join('') : '<div class="empty">Nenhuma linha. Clique em "+ Linha".</div>'}
+  </div>
+  ${E.textoBruto ? `<div class="card"><details ${E.origem !== 'XML' ? 'open' : ''}><summary>Texto lido do arquivo (para consulta)</summary><textarea class="raw" readonly style="margin-top:8px">${esc(E.textoBruto)}</textarea></details></div>` : ''}
+  <div class="row"><button class="btn gold" onclick="confirmarEntrada()">Confirmar entrada</button><span class="muted small">Total: ${fmtR(sum(E.linhas, l => numBR(l.valor)))}${E.valorDocumento ? ' | Valor do documento: ' + fmtR(num(E.valorDocumento)) : ''}</span></div>`;
+}
+
+function linhaEntradaHTML(l, i) {
+  const it = item(l.itemId), fr = ehFrasco(it);
+  const total = numBR(l.embalagens) * (fr ? numBR(l.conteudo) : 1);
+  return `<div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:${l.itemId ? '#fff' : '#fffaf0'}">
+    ${l.descricao ? `<div class="small muted" style="margin-bottom:6px">Lido: <b>${esc(l.descricao)}</b></div>` : ''}
+    <div class="grid g4">
+      <div style="grid-column:span 2"><label>Item ${l.itemId ? '' : '<span style="color:var(--bad)">(selecione)</span>'}</label><select onchange="setL(${i},'itemId',this.value,true)">${optsItens(l.itemId)}</select></div>
+      <div><label>Lote</label><input value="${esc(l.lote)}" oninput="setL(${i},'lote',this.value)"></div>
+      <div><label>Validade</label><input type="date" value="${esc(l.validade)}" oninput="setL(${i},'validade',this.value)"></div>
+      <div><label>Fabricação / manipulação</label><input type="date" value="${esc(l.fabricacao)}" oninput="setL(${i},'fabricacao',this.value)"></div>
+      <div><label>Quantidade de ${it ? esc(it.apresentacao.toLowerCase()) + '(s)' : 'embalagens'}</label><input inputmode="decimal" value="${esc(l.embalagens)}" oninput="setL(${i},'embalagens',this.value,false,true)"></div>
+      ${fr ? `<div><label>${it.unidadeControle} por frasco</label><input inputmode="decimal" value="${esc(l.conteudo)}" oninput="setL(${i},'conteudo',this.value,false,true)"></div>` : ''}
+      <div><label>Valor total (R$)</label><input inputmode="decimal" value="${esc(l.valor)}" oninput="setL(${i},'valor',this.value)"></div>
+    </div>
+    <div class="row" style="margin-top:8px"><span class="small" id="tot_${l.k}">${it ? 'Entra no estoque: <b>' + fmtQtd(it, total) + '</b>' : ''}</span>
+      <button class="btn ghost sm right" onclick="E.linhas.splice(${i},1);renderEntrada()">Remover</button></div>
+  </div>`;
+}
+function setL(i, campo, v, rerender, atualizaTotal) {
+  const l = E.linhas[i]; l[campo] = v;
+  if (campo === 'itemId') { const it = item(v); if (it && ehFrasco(it) && !numBR(l.conteudo)) l.conteudo = brCont(it); }
+  if (rerender) renderEntrada();
+  else if (atualizaTotal) { const it = item(l.itemId); const el = $('tot_' + l.k); if (it && el) el.innerHTML = 'Entra no estoque: <b>' + fmtQtd(it, numBR(l.embalagens) * (ehFrasco(it) ? numBR(l.conteudo) : 1)) + '</b>'; }
+}
+
+function tabelaUltimasEntradas() {
+  const ls = S.lotes.slice().sort((a,b) => (b.registradoEm || b.dataEntrada).localeCompare(a.registradoEm || a.dataEntrada)).slice(0, 15);
+  if (!ls.length) return '<div class="empty">Nenhuma entrada registrada.</div>';
+  return `<div class="scroll"><table class="tbl"><tr><th>Data</th><th>Item</th><th>Lote</th><th>Validade</th><th class="n">Quantidade</th><th>Farmácia</th><th>Origem</th></tr>
+  ${ls.map(l => { const it = item(l.itemId), f = farm(l.farmaciaId); return `<tr><td>${fmtData(l.dataEntrada)}</td><td>${esc(nomeItem(it))}</td><td>${esc(l.lote)}</td><td>${pillVenc(l.validade)}</td><td class="n">${fmtQtd(it, num(l.quantidadeTotal))}</td><td>${esc(f ? f.nome : '')}</td><td class="small muted">${esc(l.origem)}</td></tr>`; }).join('')}</table></div>`;
+}
+
+function iniciarManual() { novaEntrada('Manual'); E.linhas.push(novaLinha()); renderEntrada(); }
+function iniciarXML() { $('fileXml').value = ''; $('fileXml').click(); }
+function iniciarArquivo(tipo) { const id = {pdf:'filePdf', foto:'fileFoto', codigo:'fileCodigo'}[tipo]; $(id).value = ''; $(id).click(); }
+
+async function confirmarEntrada() {
+  if (!E.linhas.length) { toast('Adicione ao menos um item.', 1); return; }
+  if (!E.responsavel.trim()) { toast('Informe quem recebeu.', 1); return; }
+  if (!E.farmaciaId && !E.farmaciaNova.trim()) { toast('Selecione ou digite a farmácia.', 1); return; }
+  for (const [i, l] of E.linhas.entries()) {
+    const it = item(l.itemId), n = i + 1;
+    if (!it) { toast(`Linha ${n}: selecione o item.`, 1); return; }
+    if (!l.lote.trim()) { toast(`Linha ${n}: informe o lote.`, 1); return; }
+    if (!l.validade) { toast(`Linha ${n}: informe a validade.`, 1); return; }
+    if (!(numBR(l.embalagens) > 0)) { toast(`Linha ${n}: informe a quantidade.`, 1); return; }
+    if (ehFrasco(it) && !(numBR(l.conteudo) > 0)) { toast(`Linha ${n}: informe ${it.unidadeControle} por frasco.`, 1); return; }
+    if (diasAte(l.validade) < 0 && !confirm(`Linha ${n}: a validade informada já passou. Gravar mesmo assim?`)) return;
+  }
+  loading(true, 'Gravando entrada...');
+  try {
+    let fId = E.farmaciaId;
+    if (!fId) {
+      const existe = S.farmacias.find(f => norm(f.nome) === norm(E.farmaciaNova) || (E.farmaciaCnpj && f.cnpj === E.farmaciaCnpj));
+      if (existe) fId = existe.id;
+      else { const f = {id:uid(), nome:E.farmaciaNova.trim(), cnpj:E.farmaciaCnpj || '', intervaloEntregaDias:'', prazoMedioDias:'', contato:'', ativo:'1'}; await api('upsert', {table:'Farmacias', row:f}); fId = f.id; }
+    }
+    const agora = new Date().toISOString();
+    const rows = E.linhas.map(l => {
+      const it = item(l.itemId), cont = ehFrasco(it) ? numBR(l.conteudo) : 1, emb = numBR(l.embalagens);
+      return {id:uid(), itemId:it.id, lote:l.lote.trim().toUpperCase(), validade:l.validade, fabricacao:l.fabricacao, farmaciaId:fId, dataEntrada:E.data || hoje(), qtdEmbalagens:String(emb), conteudoPorEmbalagem:String(cont), quantidadeTotal:String(Math.round(emb * cont * 1000) / 1000), valorTotal:String(numBR(l.valor)), documento:E.documento, origem:E.origem, responsavel:E.responsavel.trim(), obs:'', registradoEm:agora};
+    });
+    await api('insertMany', {table:'Lotes', rows});
+    // Aprende os nomes/códigos lidos para reconhecer o item automaticamente nas próximas vezes
+    const aprender = {};
+    E.linhas.forEach(l => { if (l.chave) { const it = item(l.itemId); const atuais = String(it.apelidos || '').split('|').filter(Boolean); if (!atuais.includes(l.chave)) (aprender[it.id] = aprender[it.id] || atuais.slice()).push(l.chave); } });
+    for (const id in aprender) { const it = Object.assign({}, item(id), {apelidos: Array.from(new Set(aprender[id])).join('|')}); await api('upsert', {table:'Itens', row:it}); }
+    toast(`Entrada gravada: ${rows.length} lote(s).`);
+    E = null; await carregar();
+  } catch(e) { loading(false); toast(e.message, 1); }
+}
+
+/* ---------- reconhecimento de item, farmácia e campos ---------- */
+function acharItem(chave, texto) {
+  const k = norm(chave), t = norm(texto || chave);
+  if (!k && !t) return '';
+  for (const it of S.itens) { const ap = String(it.apelidos || '').split('|').filter(Boolean); if (ap.some(a => a === chave || (norm(a) && norm(a) === k))) return it.id; }
+  let melhor = '', tam = 0;
+  for (const it of S.itens) { const s = norm(it.substancia); if (s.length >= 3 && (' ' + t + ' ').includes(' ' + s + ' ') && s.length > tam) { melhor = it.id; tam = s.length; } }
+  if (!melhor) for (const it of S.itens) { const s = norm(it.substancia).split(' ')[0]; if (s.length >= 5 && t.includes(s) && s.length > tam) { melhor = it.id; tam = s.length; } }
+  return melhor;
+}
+function acharFarmacia(nome, cnpj) {
+  const c = String(cnpj || '').replace(/\D/g, '');
+  if (c) { const f = S.farmacias.find(f => String(f.cnpj).replace(/\D/g,'') === c); if (f) return f.id; }
+  const n = norm(nome); if (!n) return '';
+  const f = S.farmacias.find(f => norm(f.nome) === n || (norm(f.nome).length > 5 && n.includes(norm(f.nome))) || (n.length > 5 && norm(f.nome).includes(n)));
+  return f ? f.id : '';
+}
+function normData(s) {
+  if (!s) return '';
+  s = String(s).trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if (m) { let y = +m[3]; if (y < 100) y += 2000; const mo = +m[2], d = +m[1]; if (mo < 1 || mo > 12 || d < 1 || d > 31) return ''; return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+  m = s.match(/^(\d{1,2})[\/\-.](\d{2,4})$/);
+  if (m) { let y = +m[2]; if (y < 100) y += 2000; const mo = +m[1]; if (mo < 1 || mo > 12) return ''; const ult = new Date(y, mo, 0).getDate(); return `${y}-${String(mo).padStart(2,'0')}-${ult}`; }
+  return '';
+}
+const RE_DATA = '(\\d{1,2}[\\/\\-.]\\d{1,2}[\\/\\-.]\\d{2,4}|\\d{1,2}[\\/\\-.]\\d{2,4})';
+function extrairCampos(texto) {
+  const t = String(texto || '').replace(/\r/g, '');
+  const r = {};
+  let m = t.match(/\b(?:lote|lt)\b\s*(?:n[º°o.]*)?\s*[:.\-]?\s*([A-Z0-9][A-Z0-9\-\/.]{1,24})/i);
+  if (m && !/^(val|fab|data)/i.test(m[1])) r.lote = m[1].replace(/[.\-\/]+$/, '').toUpperCase();
+  m = t.match(new RegExp('\\b(?:val(?:idade)?|venc(?:imento)?|vence\\s*em|exp(?:ira)?)\\b\\.?\\s*[:.\\-]?\\s*' + RE_DATA, 'i'));
+  if (m) r.validade = normData(m[1]);
+  m = t.match(new RegExp('\\b(?:fab(?:rica[cç][aã]o)?|manip(?:ula[cç][aã]o|ulado)?(?:\\s*em)?|data\\s+de\\s+manipula[cç][aã]o|dt\\.?\\s*manip)\\b\\.?\\s*[:.\\-]?\\s*' + RE_DATA, 'i'));
+  if (m) r.fabricacao = normData(m[1]);
+  if (!r.validade) { const ds = [...t.matchAll(/\b(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})\b/g)].map(x => normData(x[1])).filter(Boolean).sort(); if (ds.length >= 2 && !r.fabricacao) { r.fabricacao = ds[0]; r.validade = ds[ds.length - 1]; } }
+  m = t.match(/(\d+(?:[.,]\d+)?)\s*(mg|ui|u\.i\.|ml)\b/i);
+  if (m) { r.conteudo = br(numBR(m[1])); r.unidade = m[2].toLowerCase().startsWith('u') ? 'UI' : m[2].toLowerCase() === 'ml' ? 'mL' : 'mg'; }
+  m = t.match(/(\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2})/); if (m) r.cnpj = m[1].replace(/\D/g, '');
+  r.itemId = acharItem('', t);
+  r.farmaciaId = acharFarmacia('', r.cnpj);
+  if (!r.farmaciaId) for (const f of S.farmacias) if (norm(t).includes(norm(f.nome))) { r.farmaciaId = f.id; break; }
+  return r;
+}
+function linhaDeCampos(c, descricao) {
+  const it = item(c.itemId);
+  const l = novaLinha({itemId:c.itemId || '', lote:c.lote || '', validade:c.validade || '', fabricacao:c.fabricacao || '', embalagens:'1', descricao: descricao || ''});
+  if (it && ehFrasco(it)) l.conteudo = c.conteudo && c.unidade === it.unidadeControle ? c.conteudo : brCont(it);
+  return l;
+}
+
+/* ---------- XML (NF-e de produto e NFS-e de serviço) ---------- */
+const tg = (el, n) => { if (!el) return ''; const x = el.getElementsByTagNameNS('*', n)[0]; return x ? x.textContent.trim() : ''; };
+async function lerXML(files) {
+  if (!files || !files.length) return;
+  novaEntrada('XML');
+  const avisos = [];
+  for (const file of files) {
+    const txt = await file.text();
+    const doc = new DOMParser().parseFromString(txt, 'application/xml');
+    if (doc.getElementsByTagName('parsererror').length) { avisos.push(`${esc(file.name)}: arquivo XML inválido.`); continue; }
+    const r = interpretarXML(doc);
+    if (!E.farmaciaId && !E.farmaciaNova) { E.farmaciaId = acharFarmacia(r.emitente, r.cnpj); if (!E.farmaciaId) { E.farmaciaNova = r.emitente; E.farmaciaCnpj = r.cnpj; } }
+    E.documento = [E.documento, r.numero].filter(Boolean).join(', ');
+    if (r.data) E.data = r.data;
+    if (r.servico) {
+      avisos.push(`${esc(file.name)} é uma nota de <b>serviço</b>: ela não traz itens, lote nem validade. Selecione o item e preencha lote e validade pelo rótulo.`);
+      E.valorDocumento = r.valor;
+      const c = extrairCampos(r.descricao);
+      const l = linhaDeCampos(c, r.descricao.slice(0, 160)); l.valor = br(num(r.valor)); E.linhas.push(l);
+      E.textoBruto += (E.textoBruto ? '\n\n' : '') + r.descricao;
+    } else {
+      E.linhas.push(...r.linhas);
+      if (r.linhas.some(l => !l.lote)) avisos.push('Alguns itens vieram sem lote ou validade na nota. Complete pelo rótulo.');
+    }
+  }
+  if (E.linhas.some(l => !l.itemId)) avisos.push('Itens em amarelo não foram reconhecidos. Selecione o item correspondente: o sistema aprende e reconhece sozinho nas próximas notas.');
+  E.aviso = Array.from(new Set(avisos)).join('<br>');
+  renderEntrada();
+}
+function interpretarXML(doc) {
+  const dets = doc.getElementsByTagNameNS('*', 'det');
+  const emit = doc.getElementsByTagNameNS('*', 'emit')[0];
+  if (dets.length && doc.getElementsByTagNameNS('*', 'prod').length) {
+    const ide = doc.getElementsByTagNameNS('*', 'ide')[0];
+    const linhas = [];
+    for (const det of dets) {
+      const prod = det.getElementsByTagNameNS('*', 'prod')[0]; if (!prod) continue;
+      const xProd = tg(prod, 'xProd'), qCom = num(tg(prod, 'qCom')), vProd = num(tg(prod, 'vProd'));
+      const ean = tg(prod, 'cEAN').replace(/^0+/, ''), cProd = tg(prod, 'cProd');
+      const chave = ean && /^\d{8,14}$/.test(ean) ? 'GTIN:' + ean : 'NF:' + norm(xProd);
+      const itemId = acharItem(chave, xProd) || (ean ? acharItem('GTIN:' + ean, xProd) : '');
+      const it = item(itemId);
+      const c = extrairCampos(xProd);
+      const conteudo = it && ehFrasco(it) ? (c.conteudo && c.unidade === it.unidadeControle ? c.conteudo : brCont(it)) : '';
+      const rastros = prod.getElementsByTagNameNS('*', 'rastro');
+      if (rastros.length) {
+        for (const r of rastros) { const q = num(tg(r, 'qLote')) || qCom;
+          linhas.push(novaLinha({itemId, lote:tg(r, 'nLote').toUpperCase(), validade:normData(tg(r, 'dVal')), fabricacao:normData(tg(r, 'dFab')), embalagens:br(q), conteudo, valor:br(Math.round(vProd * (qCom ? q / qCom : 1) * 100) / 100), chave, descricao:`${xProd} (${cProd})`})); }
+      } else {
+        linhas.push(novaLinha({itemId, lote:c.lote || '', validade:c.validade || '', fabricacao:c.fabricacao || '', embalagens:br(qCom), conteudo, valor:br(vProd), chave, descricao:`${xProd} (${cProd})`}));
+      }
+    }
+    return {servico:false, emitente:tg(emit, 'xNome'), cnpj:tg(emit, 'CNPJ'), numero:tg(ide, 'nNF'), data:normData(tg(ide, 'dhEmi') || tg(ide, 'dEmi')), linhas};
+  }
+  // NFS-e (padrão nacional e modelos municipais comuns)
+  const prest = doc.getElementsByTagNameNS('*', 'PrestadorServico')[0] || doc.getElementsByTagNameNS('*', 'Prestador')[0] || emit;
+  const emitente = tg(prest, 'xNome') || tg(prest, 'RazaoSocial') || tg(prest, 'NomeFantasia') || tg(doc, 'xNome');
+  const cnpj = tg(prest, 'CNPJ') || tg(prest, 'Cnpj');
+  const numero = tg(doc, 'nNFSe') || tg(doc, 'Numero') || tg(doc, 'nDPS');
+  const data = normData(tg(doc, 'dhEmi') || tg(doc, 'DataEmissao') || tg(doc, 'dhProc'));
+  const valor = String(num(tg(doc, 'vServ') || tg(doc, 'ValorServicos') || tg(doc, 'vLiq') || tg(doc, 'ValorLiquidoNfse')));
+  const descricao = tg(doc, 'xDescServ') || tg(doc, 'Discriminacao') || tg(doc, 'xDescricao') || '';
+  return {servico:true, emitente, cnpj, numero, data, valor, descricao};
+}
+
+/* ---------- PDF ---------- */
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+async function lerPDF(file) {
+  if (!file) return;
+  loading(true, 'Lendo o PDF...');
+  try {
+    await carregarScript(PDFJS);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+    const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
+    let texto = '';
+    for (let p = 1; p <= Math.min(pdf.numPages, 10); p++) {
+      const pg = await pdf.getPage(p), tc = await pg.getTextContent();
+      texto += tc.items.map(x => x.str + (x.hasEOL ? '\n' : ' ')).join('') + '\n';
+    }
+    let aviso = '';
+    if (texto.replace(/\s/g, '').length < 20) {
+      loading(true, 'PDF escaneado. Lendo a imagem (pode levar alguns segundos)...');
+      texto = '';
+      for (let p = 1; p <= Math.min(pdf.numPages, 3); p++) {
+        const pg = await pdf.getPage(p), vp = pg.getViewport({scale: 2});
+        const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+        await pg.render({canvasContext: cv.getContext('2d'), viewport: vp}).promise;
+        texto += await ocr(cv) + '\n';
+      }
+      aviso = 'Este PDF era uma imagem escaneada. A leitura é aproximada: confira com atenção. ';
+    }
+    novaEntrada('PDF');
+    preencherDeTexto(texto, aviso);
+  } catch(e) { toast('Não foi possível ler o PDF: ' + e.message, 1); }
+  finally { loading(false); }
+}
+function preencherDeTexto(texto, aviso, adicionar) {
+  const c = extrairCampos(texto);
+  if (!adicionar) { E.farmaciaId = c.farmaciaId || ''; if (!E.farmaciaId && c.cnpj) E.farmaciaCnpj = c.cnpj; }
+  const m = texto.match(/\b(?:pedido|nota|nf|n[º°o]\.?)\s*(?:n[º°o.]*)?\s*[:#]?\s*(\d{3,10})\b/i);
+  if (m && !E.documento) E.documento = m[1];
+  E.linhas.push(linhaDeCampos(c, ''));
+  E.textoBruto += (E.textoBruto ? '\n\n----------\n\n' : '') + texto.trim();
+  const falta = [!c.itemId && 'item', !c.lote && 'lote', !c.validade && 'validade'].filter(Boolean);
+  E.aviso = (aviso || '') + (falta.length ? `Não encontrei: <b>${falta.join(', ')}</b>. Complete usando o texto lido abaixo. ` : 'Campos preenchidos automaticamente. Confira com o produto em mãos. ') + 'Se o pedido tiver vários itens, use "+ Linha".';
+  renderEntrada();
+}
+
+/* ---------- Foto (OCR no próprio navegador, sem IA) ---------- */
+const TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+async function ocr(imagem) {
+  await carregarScript(TESS);
+  const w = await Tesseract.createWorker('por');
+  try { const {data} = await w.recognize(imagem); return data.text || ''; } finally { await w.terminate(); }
+}
+async function lerFoto(file, adicionar) {
+  if (!file) return;
+  loading(true, 'Lendo o rótulo (pode levar alguns segundos)...');
+  try {
+    const img = await prepararImagem(file);
+    const texto = await ocr(img);
+    if (!adicionar || !E) novaEntrada('Foto');
+    preencherDeTexto(texto, 'Leitura de foto é aproximada. Confira lote e validade no rótulo. ', adicionar);
+  } catch(e) { toast('Não foi possível ler a foto: ' + e.message, 1); }
+  finally { loading(false); }
+}
+async function prepararImagem(file) {
+  const bmp = await createImageBitmap(file);
+  const max = 2000, esc2 = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * esc2); cv.height = Math.round(bmp.height * esc2);
+  const ctx = cv.getContext('2d'); ctx.filter = 'grayscale(1) contrast(1.4)'; ctx.drawImage(bmp, 0, 0, cv.width, cv.height);
+  return cv;
+}
+
+/* ---------- Código DataMatrix / barras (GS1) ---------- */
+const ZXING = 'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js';
+async function decodificarCodigo(file) {
+  if ('BarcodeDetector' in window) {
+    try {
+      const fmts = await BarcodeDetector.getSupportedFormats();
+      const det = new BarcodeDetector({formats: fmts.filter(f => ['data_matrix','qr_code','ean_13','code_128','ean_8'].includes(f))});
+      const res = await det.detect(await createImageBitmap(file));
+      if (res.length) return res[0].rawValue;
+    } catch(e) {}
+  }
+  await carregarScript(ZXING);
+  const hints = new Map();
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.DATA_MATRIX, ZXing.BarcodeFormat.QR_CODE, ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.CODE_128]);
+  hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+  const reader = new ZXing.BrowserMultiFormatReader(hints);
+  const url = URL.createObjectURL(file);
+  try { const r = await reader.decodeFromImageUrl(url); return r.getText(); } finally { URL.revokeObjectURL(url); }
+}
+function parseGS1(raw) {
+  let s = String(raw || '').replace(/^\][A-Za-z]\d/, '');
+  const r = {};
+  if (/^\(\d{2,4}\)/.test(s)) { for (const m of s.matchAll(/\((\d{2,4})\)([^(]*)/g)) r[m[1]] = m[2].trim(); }
+  else {
+    const GS = '\u001d', fixos = {'01':14, '02':14, '11':6, '15':6, '17':6};
+    let i = 0, guard = 0;
+    while (i < s.length && guard++ < 20) {
+      if (s[i] === GS) { i++; continue; }
+      const a2 = s.substr(i, 2), a3 = s.substr(i, 3);
+      if (fixos[a2]) { r[a2] = s.substr(i + 2, fixos[a2]); i += 2 + fixos[a2]; continue; }
+      const ai = ['10','21'].includes(a2) ? a2 : (a3 === '713' ? a3 : null);
+      if (!ai) break;
+      let fim = s.indexOf(GS, i + ai.length); if (fim < 0) fim = s.length;
+      r[ai] = s.substring(i + ai.length, fim); i = fim;
+    }
+  }
+  const out = {gtin: r['01'] || r['02'] || '', lote: r['10'] || '', serie: r['21'] || '', registro: r['713'] || ''};
+  const v = r['17'];
+  if (v && /^\d{6}$/.test(v)) { const y = 2000 + +v.slice(0, 2), mo = +v.slice(2, 4); let d = +v.slice(4, 6); if (!d) d = new Date(y, mo, 0).getDate(); out.validade = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+  const f = r['11']; if (f && /^\d{6}$/.test(f)) { const y = 2000 + +f.slice(0, 2), mo = f.slice(2, 4); let d = +f.slice(4, 6) || 1; out.fabricacao = `${y}-${mo}-${String(d).padStart(2,'0')}`; }
+  if (!Object.keys(r).length && /^\d{8,14}$/.test(s)) out.gtin = s;
+  return out;
+}
+async function lerCodigo(file, adicionar) {
+  if (!file) return;
+  loading(true, 'Lendo o código...');
+  try {
+    const raw = await decodificarCodigo(file);
+    const g = parseGS1(raw);
+    if (!adicionar || !E) novaEntrada('Codigo');
+    const chave = g.gtin ? 'GTIN:' + g.gtin.replace(/^0+/, '') : '';
+    const itemId = chave ? acharItem(chave, '') : '';
+    const it = item(itemId);
+    E.linhas.push(novaLinha({itemId, lote:g.lote.toUpperCase(), validade:g.validade || '', fabricacao:g.fabricacao || '', embalagens:'1', conteudo: it && ehFrasco(it) ? brCont(it) : '', chave, descricao: g.gtin ? `Código ${g.gtin}${g.registro ? ' | Reg. ' + g.registro : ''}` : 'Código lido: ' + raw}));
+    E.aviso = (!g.lote ? 'Este código não traz lote (é um código de barras simples). Preencha lote e validade pela caixa. ' : '') + (!itemId ? 'Produto ainda não reconhecido: selecione o item uma vez e das próximas vezes ele será identificado pelo código. ' : '') + 'Se recebeu várias unidades do mesmo lote, ajuste a quantidade em vez de ler de novo.';
+    renderEntrada();
+  } catch(e) { toast('Não encontrei um código legível na foto. Tente aproximar e com boa luz.', 1); }
+  finally { loading(false); }
+}
+
+/* =========================================================
+   SAÍDA / BAIXA
+   ========================================================= */
+let SD = {itemId:'', loteId:'', quantidade:'', motivo:'Uso em paciente', paciente:'', responsavel:'', data:'', obs:''};
+function renderSaida() {
+  if (!SD.data) SD.data = hoje();
+  const it = item(SD.itemId);
+  const lotes = it ? lotesItem(it.id, true) : [];
+  if (it && !lotes.find(l => l.id === SD.loteId)) { const v = lotes.find(l => diasAte(l.validade) >= 0) || lotes[0]; SD.loteId = v ? v.id : ''; }
+  const lote = S.lotes.find(l => l.id === SD.loteId);
+  const saldo = lote ? saldoLote(lote) : 0;
+  const primeiro = lotes.find(l => diasAte(l.validade) >= 0);
+  $('saida').innerHTML = `
+  <div class="sec-title"><h2>Saída / baixa</h2></div>
+  <div class="card">
+    <div class="grid g2">
+      <div><label>Item</label><select onchange="SD.itemId=this.value;SD.loteId='';renderSaida()">${optsItens(SD.itemId)}</select></div>
+      <div><label>Lote</label><select onchange="SD.loteId=this.value;renderSaida()" ${!it ? 'disabled' : ''}>
+        ${!lotes.length ? '<option value="">Sem saldo em estoque</option>' : lotes.map(l => `<option value="${l.id}" ${l.id === SD.loteId ? 'selected' : ''}>${esc(l.lote)} | val. ${fmtData(l.validade)}${diasAte(l.validade) < 0 ? ' (VENCIDO)' : ''} | saldo ${fmtNum(saldoLote(l))} ${unid(it)}</option>`).join('')}</select>
+        ${lote && primeiro && lote.id !== primeiro.id && diasAte(lote.validade) >= 0 ? '<div class="hint" style="color:var(--warn)">Há um lote que vence antes. O ideal é usar primeiro o que vence primeiro.</div>' : ''}
+        ${lote && diasAte(lote.validade) < 0 && SD.motivo === 'Uso em paciente' ? '<div class="hint" style="color:var(--bad)">Lote vencido: não usar em paciente.</div>' : ''}</div>
+    </div>
+    <div style="height:12px"></div>
+    <label>Motivo</label>
+    <div class="radio" style="flex-wrap:wrap">${MOTIVOS.map(m => `<button class="${SD.motivo === m ? 'on' : ''}" onclick="SD.motivo='${m}';renderSaida()">${m}</button>`).join('')}</div>
+    <div style="height:12px"></div>
+    <div class="grid g4">
+      <div><label>Quantidade${it ? ' (' + unid(it) + ')' : ''}</label><input id="sdQtd" inputmode="decimal" value="${esc(SD.quantidade)}" oninput="SD.quantidade=this.value;atualizaSaidaHint()">
+        <div class="hint" id="sdHint"></div></div>
+      ${SD.motivo === 'Uso em paciente' ? `<div><label>Paciente (código ou prontuário)</label><input value="${esc(SD.paciente)}" oninput="SD.paciente=this.value" placeholder="Evite nome completo"></div>` : ''}
+      <div><label>Data</label><input type="date" value="${SD.data}" oninput="SD.data=this.value"></div>
+      <div><label>Responsável</label><input list="dlResp" value="${esc(SD.responsavel)}" oninput="SD.responsavel=this.value">${datalistResp()}</div>
+    </div>
+    <div style="height:10px"></div>
+    <label>Observação</label><input value="${esc(SD.obs)}" oninput="SD.obs=this.value" placeholder="${SD.motivo === 'Avaria' ? 'Ex.: frasco quebrou ao abrir' : SD.motivo === 'Perda' ? 'Ex.: armazenado fora da temperatura' : ''}">
+    <div class="row" style="margin-top:14px">
+      <button class="btn" onclick="confirmarSaida()" ${!lote ? 'disabled' : ''}>Registrar saída</button>
+      ${lote ? `<span class="small muted">Saldo do lote: <b>${fmtQtd(it, saldo)}</b></span>` : ''}
+    </div>
+  </div>
+  <div class="card"><h3>Últimas saídas</h3>${tabelaMovs(S.movimentos.slice().sort((a,b) => (b.registradoEm || b.data).localeCompare(a.registradoEm || a.data)).slice(0, 20), true)}</div>`;
+  atualizaSaidaHint();
+}
+function atualizaSaidaHint() {
+  const it = item(SD.itemId), el = $('sdHint'); if (!el || !it) return;
+  const q = numBR(SD.quantidade);
+  el.innerHTML = ehFrasco(it) && q > 0 && num(it.conteudoPadrao) > 0 ? `= ${fmtNum(q / num(it.conteudoPadrao), 2)} frasco(s) de ${fmtNum(num(it.conteudoPadrao))} ${it.unidadeControle}` : '';
+}
+async function confirmarSaida() {
+  const it = item(SD.itemId), lote = S.lotes.find(l => l.id === SD.loteId), q = numBR(SD.quantidade);
+  if (!it || !lote) { toast('Selecione item e lote.', 1); return; }
+  if (!(q > 0)) { toast('Informe a quantidade.', 1); return; }
+  if (q > saldoLote(lote) + 1e-9) { toast(`Quantidade maior que o saldo do lote (${fmtNum(saldoLote(lote))} ${unid(it)}).`, 1); return; }
+  if (!SD.responsavel.trim()) { toast('Informe o responsável.', 1); return; }
+  if (SD.motivo === 'Uso em paciente' && diasAte(lote.validade) < 0 && !confirm('Este lote está vencido. Registrar uso em paciente mesmo assim?')) return;
+  const row = {id:uid(), data:SD.data || hoje(), loteId:lote.id, itemId:it.id, motivo:SD.motivo, quantidade:String(q), paciente:SD.motivo === 'Uso em paciente' ? SD.paciente.trim() : '', responsavel:SD.responsavel.trim(), obs:SD.obs.trim(), registradoEm:new Date().toISOString()};
+  loading(true, 'Registrando saída...');
+  try {
+    await api('insertMany', {table:'Movimentos', rows:[row]});
+    toast('Saída registrada.');
+    SD = Object.assign(SD, {quantidade:'', paciente:'', obs:''});
+    await carregar();
+  } catch(e) { loading(false); toast(e.message, 1); }
+}
+function tabelaMovs(movs, podeExcluir) {
+  if (!movs.length) return '<div class="empty">Nenhuma saída no período.</div>';
+  return `<div class="scroll"><table class="tbl"><tr><th>Data</th><th>Item</th><th>Lote</th><th>Motivo</th><th class="n">Quantidade</th><th class="n">Valor</th><th>Paciente</th><th>Responsável</th>${podeExcluir ? '<th class="noprint"></th>' : ''}</tr>
+  ${movs.map(m => { const it = item(m.itemId), l = S.lotes.find(x => x.id === m.loteId); const pc = MOTIVOS_PERDA.includes(m.motivo) ? 'p-bad' : m.motivo === 'Uso em paciente' ? 'p-ok' : 'p-mute';
+    return `<tr><td>${fmtData(m.data)}</td><td>${esc(nomeItem(it))}</td><td>${esc(l ? l.lote : '')}</td><td><span class="pill ${pc}">${esc(m.motivo)}</span>${m.obs ? `<div class="small muted">${esc(m.obs)}</div>` : ''}</td><td class="n">${fmtQtd(it, num(m.quantidade))}</td><td class="n">${l ? fmtR(num(m.quantidade) * custoUnit(l)) : ''}</td><td>${esc(m.paciente)}</td><td>${esc(m.responsavel)}</td>${podeExcluir ? `<td class="noprint"><button class="btn ghost sm" onclick="excluir('Movimentos','${m.id}')">Estornar</button></td>` : ''}</tr>`; }).join('')}</table></div>`;
+}
+async function excluir(tabela, id) {
+  const msg = tabela === 'Movimentos' ? 'Estornar esta saída? O saldo volta para o lote.' : 'Excluir este lançamento de entrada?';
+  if (!confirm(msg)) return;
+  loading(true, 'Excluindo...');
+  try { await api('remove', {table:tabela, id}); toast('Feito.'); fecharModal(); await carregar(); }
+  catch(e) { loading(false); toast(e.message, 1); }
+}
+
+/* =========================================================
+   ESTOQUE
+   ========================================================= */
+let filtroEst = {busca:'', cat:'', zerados:false};
+function renderEstoque() {
+  const b = norm(filtroEst.busca);
+  const lista = S.itens.filter(i => (i.ativo !== '0') && (!filtroEst.cat || i.categoria === filtroEst.cat) && (!b || norm(nomeItem(i)).includes(b)))
+    .map(it => ({it, saldo: saldoItem(it.id), valido: saldoItem(it.id, true), lotes: lotesItem(it.id, true), s: sugestao(it)}))
+    .filter(x => filtroEst.zerados || x.saldo > 0 || x.s.status === 'Sem estoque')
+    .sort((a,b) => nomeItem(a.it).localeCompare(nomeItem(b.it)));
+  $('estoque').innerHTML = `
+  <div class="sec-title"><h2>Estoque atual</h2></div>
+  <div class="card noprint"><div class="grid g3">
+    <div><label>Buscar</label><input value="${esc(filtroEst.busca)}" oninput="filtroEst.busca=this.value;clearTimeout(window._fe);window._fe=setTimeout(()=>{renderEstoque();const x=document.querySelector('#estoque input');x.focus();x.setSelectionRange(x.value.length,x.value.length)},300)"></div>
+    <div><label>Categoria</label><select onchange="filtroEst.cat=this.value;renderEstoque()"><option value="">Todas</option>${CATEGORIAS.map(c => `<option ${filtroEst.cat === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+    <div><label>&nbsp;</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;color:var(--ink)"><input type="checkbox" style="width:auto" ${filtroEst.zerados ? 'checked' : ''} onchange="filtroEst.zerados=this.checked;renderEstoque()"> Mostrar itens sem saldo</label></div>
+  </div></div>
+  <div class="card">${!lista.length ? '<div class="empty">Nenhum item com saldo.</div>' : `<div class="scroll"><table class="tbl">
+    <tr><th>Item</th><th>Categoria</th><th class="n">Saldo total</th><th class="n">Saldo válido</th><th>Próximo vencimento</th><th class="n">Valor</th><th>Situação</th></tr>
+    ${lista.map(x => `<tr class="click" onclick="modalItemEstoque('${x.it.id}')"><td><b>${esc(nomeItem(x.it))}</b><div class="small muted">${x.lotes.length} lote(s)</div></td><td>${esc(x.it.categoria)}</td><td class="n">${fmtQtd(x.it, x.saldo)}</td><td class="n">${fmtQtd(x.it, x.valido)}</td><td>${x.lotes.length ? pillVenc(x.lotes[0].validade) : '-'}</td><td class="n">${fmtR(valorEstoqueItem(x.it.id))}</td><td>${pillStatus(x.s.status)}</td></tr>`).join('')}
+  </table></div><p class="small muted">Clique em um item para ver lotes e movimentações.</p>`}</div>`;
+}
+function modalItemEstoque(id) {
+  const it = item(id), s = sugestao(it);
+  const lotes = lotesItem(id);
+  const movs = S.movimentos.filter(m => m.itemId === id).sort((a,b) => b.data.localeCompare(a.data)).slice(0, 30);
+  abrirModal(`<div class="row"><h3 style="margin:0">${esc(nomeItem(it))}</h3><button class="btn ghost sm right" onclick="fecharModal()">Fechar</button></div>
+  <p class="small muted">Consumo médio: <b>${fmtNum(s.cd, 2)} ${unid(it)}/dia</b> (últimos ${s.base} dias) | Estoque dura até: <b>${s.ruptura ? fmtData(s.ruptura) : '-'}</b></p>
+  <h3>Lotes</h3><div class="scroll"><table class="tbl"><tr><th>Lote</th><th>Validade</th><th>Entrada</th><th class="n">Entrou</th><th class="n">Saldo</th><th></th></tr>
+  ${lotes.map(l => `<tr><td>${esc(l.lote)}<div class="small muted">${esc((farm(l.farmaciaId) || {}).nome || '')}</div></td><td>${pillVenc(l.validade)}</td><td>${fmtData(l.dataEntrada)}</td><td class="n">${fmtQtd(it, num(l.quantidadeTotal))}</td><td class="n"><b>${fmtQtd(it, saldoLote(l))}</b></td><td>${saidasLote(l.id) === 0 ? `<button class="btn ghost sm" onclick="excluir('Lotes','${l.id}')">Excluir</button>` : ''}</td></tr>`).join('')}</table></div>
+  <h3 style="margin-top:14px">Saídas recentes</h3>${tabelaMovs(movs, true)}`);
+}
+
+/* =========================================================
+   RELATÓRIOS E COMPRAS
+   ========================================================= */
+let R = {de:'', ate:'', aba:'compras'};
+function renderRelatorios() {
+  if (!R.de) { R.ate = hoje(); R.de = addDias(hoje(), -30); }
+  const abas = {compras:'Sugestão de compra', resumo:'Entradas x saídas', entradas:'Entradas', saidas:'Saídas', perdas:'Perdas'};
+  $('relatorios').innerHTML = `
+  <div class="sec-title noprint"><h2>Relatórios e compras</h2></div>
+  <div class="card noprint"><div class="row">
+    ${R.aba !== 'compras' ? `<div><label>De</label><input type="date" value="${R.de}" onchange="R.de=this.value;renderRelatorios()"></div>
+    <div><label>Até</label><input type="date" value="${R.ate}" onchange="R.ate=this.value;renderRelatorios()"></div>
+    <div><label>&nbsp;</label><div class="row">${[['7','7 dias'],['30','30 dias'],['90','90 dias']].map(([d,t]) => `<button class="btn ghost sm" onclick="R.de=addDias(hoje(),-${d});R.ate=hoje();renderRelatorios()">${t}</button>`).join('')}</div></div>` : ''}
+    <div class="right"><label>&nbsp;</label><div class="row"><button class="btn ghost sm" onclick="exportarCSV()">Exportar planilha (CSV)</button><button class="btn sm" onclick="imprimir()">Imprimir / PDF</button></div></div>
+  </div>
+  <div class="row" style="margin-top:12px">${Object.entries(abas).map(([k,t]) => `<button class="btn ${R.aba === k ? '' : 'ghost'} sm" onclick="R.aba='${k}';renderRelatorios()">${t}</button>`).join('')}</div></div>
+  <div class="printhead"><h2>${esc(S.config.nomeClinica || '')} | ${abas[R.aba]}</h2><p class="small">${R.aba === 'compras' ? 'Gerado em ' + fmtData(hoje()) : 'Período: ' + fmtData(R.de) + ' a ' + fmtData(R.ate)}</p></div>
+  <div id="relConteudo">${({compras:relCompras, resumo:relResumo, entradas:relEntradas, saidas:relSaidas, perdas:relPerdas})[R.aba]()}</div>`;
+}
+function imprimir() { document.querySelectorAll('main section').forEach(s => s.classList.toggle('print', s.id === 'relatorios')); window.print(); }
+
+function dadosCompras() {
+  return S.itens.filter(i => i.ativo !== '0').map(it => ({it, s: sugestao(it)}));
+}
+function relCompras() {
+  const dados = dadosCompras();
+  const comprar = dados.filter(x => x.s.emb > 0);
+  const grupos = {};
+  comprar.forEach(x => { const k = x.s.f ? x.s.f.id : '_'; (grupos[k] = grupos[k] || []).push(x); });
+  const ordem = {'Sem estoque':0, 'Comprar agora':1, 'Próximo pedido':2};
+  return `
+  <div class="alert a-info noprint">Cálculo: <b>consumo médio diário × (intervalo entre entregas + prazo médio de entrega) + estoque de segurança (${cfgN('diasSeguranca', 7)} dias) − saldo válido</b>. O consumo considera uso em pacientes, avarias e perdas dos últimos ${cfgN('diasAnaliseConsumo', 90)} dias. Lotes vencidos não contam como saldo. O intervalo e o prazo ficam em Cadastros: o da farmácia vale para todos os itens dela, e itens com prazo próprio (como Tirzepatida e implantes) usam o deles.</div>
+  ${!comprar.length ? '<div class="card empty">Nenhuma compra necessária no momento.</div>' : ''}
+  ${Object.entries(grupos).map(([fid, xs]) => { const f = farm(fid);
+    return `<div class="card"><div class="sec-title"><h3 style="margin:0">${esc(f ? f.nome : 'Sem farmácia definida')}</h3>
+      ${f ? `<span class="small muted">entrega a cada ${num(f.intervaloEntregaDias) || '30*'} dias | prazo ${num(f.prazoMedioDias) || '7*'} dias</span>` : ''}
+      <button class="btn gold sm right noprint" onclick="copiarPedido('${fid}')">Copiar pedido (WhatsApp)</button></div>
+    <div class="scroll"><table class="tbl"><tr><th>Item</th><th>Situação</th><th class="n">Consumo/dia</th><th class="n">Saldo válido</th><th class="n">Dura até</th><th class="n">Comprar</th></tr>
+    ${xs.sort((a,b) => (ordem[a.s.status] ?? 9) - (ordem[b.s.status] ?? 9)).map(({it, s}) => `<tr><td>${esc(nomeItem(it))}${s.proprio ? `<div class="small muted">prazo próprio: entrega a cada ${s.I} dias, chega em ${s.P} dias</div>` : ''}${s.risco > 0 ? `<div class="small" style="color:var(--warn)">${fmtNum(s.risco)} ${unid(it)} em risco de vencer</div>` : ''}</td><td>${pillStatus(s.status)}</td><td class="n">${fmtNum(s.cd, 2)} ${unid(it)}</td><td class="n">${fmtQtd(it, s.saldoV)}</td><td class="n">${s.ruptura ? fmtData(s.ruptura) : '-'}</td><td class="n"><b>${fmtNum(s.emb, 0)} ${esc(it.apresentacao.toLowerCase())}(s)</b>${ehFrasco(it) ? `<div class="small muted">${fmtNum(s.emb * s.cont)} ${it.unidadeControle}</div>` : ''}</td></tr>`).join('')}
+    </table></div>${xs.some(x => x.s.padrao) ? '<p class="small muted">* Farmácia sem intervalo ou prazo cadastrado. Usado padrão de 30 e 7 dias.</p>' : ''}</div>`; }).join('')}
+  <div class="card"><details><summary>Ver todos os itens (inclusive os que não precisam de compra)</summary><div class="scroll" style="margin-top:10px"><table class="tbl"><tr><th>Item</th><th>Situação</th><th class="n">Consumo/dia</th><th class="n">Saldo válido</th><th class="n">Ponto de pedido</th><th class="n">Dura até</th></tr>
+  ${dados.sort((a,b) => nomeItem(a.it).localeCompare(nomeItem(b.it))).map(({it, s}) => `<tr><td>${esc(nomeItem(it))}</td><td>${pillStatus(s.status)}</td><td class="n">${fmtNum(s.cd, 2)}</td><td class="n">${fmtQtd(it, s.saldoV)}</td><td class="n">${fmtNum(s.ponto)} ${unid(it)}</td><td class="n">${s.ruptura ? fmtData(s.ruptura) : '-'}</td></tr>`).join('')}</table></div></details></div>`;
+}
+async function copiarPedido(fid) {
+  const f = farm(fid);
+  const xs = dadosCompras().filter(x => x.s.emb > 0 && ((x.s.f && x.s.f.id === fid) || (!x.s.f && fid === '_')));
+  const txt = `*Pedido | ${S.config.nomeClinica || ''}*\n${f ? f.nome + '\n' : ''}Data: ${fmtData(hoje())}\n\n` + xs.map(({it, s}) => `• ${it.substancia} | ${it.apresentacao}${ehFrasco(it) ? ' ' + fmtNum(s.cont) + ' ' + it.unidadeControle : ''}: *${s.emb}* ${it.apresentacao.toLowerCase()}(s)`).join('\n');
+  try { await navigator.clipboard.writeText(txt); toast('Pedido copiado. É só colar no WhatsApp.'); }
+  catch(e) { abrirModal(`<h3>Pedido</h3><textarea style="min-height:200px">${esc(txt)}</textarea><div class="row" style="margin-top:10px"><button class="btn" onclick="fecharModal()">Fechar</button></div>`); }
+}
+const noPeriodo = d => d >= R.de && d <= R.ate;
+function relResumo() {
+  const ents = S.lotes.filter(l => noPeriodo(l.dataEntrada)), sais = S.movimentos.filter(m => noPeriodo(m.data));
+  const porItem = {};
+  ents.forEach(l => { const p = porItem[l.itemId] = porItem[l.itemId] || {e:0, ve:0, s:{}, vs:0}; p.e += num(l.quantidadeTotal); p.ve += num(l.valorTotal); });
+  sais.forEach(m => { const p = porItem[m.itemId] = porItem[m.itemId] || {e:0, ve:0, s:{}, vs:0}; p.s[m.motivo] = (p.s[m.motivo] || 0) + num(m.quantidade); const l = S.lotes.find(x => x.id === m.loteId); p.vs += l ? num(m.quantidade) * custoUnit(l) : 0; });
+  const ve = sum(ents, l => num(l.valorTotal)), vs = sum(Object.values(porItem), p => p.vs);
+  const vPerda = sum(sais.filter(m => MOTIVOS_PERDA.includes(m.motivo)), m => { const l = S.lotes.find(x => x.id === m.loteId); return l ? num(m.quantidade) * custoUnit(l) : 0; });
+  const ids = Object.keys(porItem).sort((a,b) => nomeItem(item(a)).localeCompare(nomeItem(item(b))));
+  return `<div class="grid g3" style="margin-bottom:16px"><div class="kpi"><b>${fmtR(ve)}</b><span>entradas no período</span></div><div class="kpi"><b>${fmtR(vs)}</b><span>saídas no período (custo)</span></div><div class="kpi ${vPerda > 0 ? 'bad' : 'ok'}"><b>${fmtR(vPerda)}</b><span>perdas (avaria, perda, vencimento)</span></div></div>
+  <div class="card">${!ids.length ? '<div class="empty">Sem movimentação no período.</div>' : `<div class="scroll"><table class="tbl"><tr><th>Item</th><th class="n">Entrou</th>${MOTIVOS.map(m => `<th class="n">${m}</th>`).join('')}<th class="n">Saldo atual</th></tr>
+  ${ids.map(id => { const it = item(id), p = porItem[id]; return `<tr><td>${esc(nomeItem(it))}</td><td class="n">${p.e ? fmtNum(p.e) : '-'}</td>${MOTIVOS.map(m => `<td class="n">${p.s[m] ? fmtNum(p.s[m]) : '-'}</td>`).join('')}<td class="n">${fmtQtd(it, saldoItem(id))}</td></tr>`; }).join('')}</table></div><p class="small muted">Quantidades na unidade de controle de cada item (mg, UI, mL ou unidades).</p>`}</div>`;
+}
+function relEntradas() {
+  const ents = S.lotes.filter(l => noPeriodo(l.dataEntrada)).sort((a,b) => a.dataEntrada.localeCompare(b.dataEntrada));
+  if (!ents.length) return '<div class="card empty">Nenhuma entrada no período.</div>';
+  return `<div class="card"><div class="scroll"><table class="tbl"><tr><th>Data</th><th>Item</th><th>Lote</th><th>Validade</th><th>Farmácia</th><th>Documento</th><th class="n">Quantidade</th><th class="n">Valor</th><th>Recebido por</th></tr>
+  ${ents.map(l => { const it = item(l.itemId); return `<tr><td>${fmtData(l.dataEntrada)}</td><td>${esc(nomeItem(it))}</td><td>${esc(l.lote)}</td><td>${fmtData(l.validade)}</td><td>${esc((farm(l.farmaciaId) || {}).nome || '')}</td><td>${esc(l.documento)}</td><td class="n">${fmtQtd(it, num(l.quantidadeTotal))}</td><td class="n">${fmtR(num(l.valorTotal))}</td><td>${esc(l.responsavel)}</td></tr>`; }).join('')}
+  <tr><td colspan="7"><b>Total</b></td><td class="n"><b>${fmtR(sum(ents, l => num(l.valorTotal)))}</b></td><td></td></tr></table></div></div>`;
+}
+function relSaidas() { return `<div class="card">${tabelaMovs(S.movimentos.filter(m => noPeriodo(m.data)).sort((a,b) => a.data.localeCompare(b.data)), false)}</div>`; }
+function relPerdas() {
+  const ms = S.movimentos.filter(m => noPeriodo(m.data) && MOTIVOS_PERDA.includes(m.motivo)).sort((a,b) => a.data.localeCompare(b.data));
+  const porMotivo = {}; ms.forEach(m => { const l = S.lotes.find(x => x.id === m.loteId); porMotivo[m.motivo] = (porMotivo[m.motivo] || 0) + (l ? num(m.quantidade) * custoUnit(l) : 0); });
+  return `<div class="grid g3" style="margin-bottom:16px">${MOTIVOS_PERDA.map(m => `<div class="kpi ${porMotivo[m] ? 'bad' : 'ok'}"><b>${fmtR(porMotivo[m] || 0)}</b><span>${m}</span></div>`).join('')}</div><div class="card">${tabelaMovs(ms, false)}</div>`;
+}
+function exportarCSV() {
+  let linhas = [];
+  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const n = v => String(Math.round(num(v) * 1000) / 1000).replace('.', ',');
+  if (R.aba === 'compras') {
+    linhas.push(['Farmácia','Item','Situação','Consumo/dia','Saldo válido','Unidade','Dura até','Comprar (embalagens)','Comprar (quantidade)']);
+    dadosCompras().forEach(({it, s}) => linhas.push([s.f ? s.f.nome : '', nomeItem(it), s.status, n(s.cd), n(s.saldoV), unid(it), fmtData(s.ruptura), s.emb, n(s.emb * s.cont)]));
+  } else if (R.aba === 'entradas' || R.aba === 'resumo') {
+    linhas.push(['Data','Item','Lote','Validade','Fabricação','Farmácia','Documento','Embalagens','Conteúdo por embalagem','Quantidade','Unidade','Valor','Recebido por','Origem']);
+    S.lotes.filter(l => noPeriodo(l.dataEntrada)).forEach(l => { const it = item(l.itemId); linhas.push([fmtData(l.dataEntrada), nomeItem(it), l.lote, fmtData(l.validade), fmtData(l.fabricacao), (farm(l.farmaciaId) || {}).nome || '', l.documento, n(l.qtdEmbalagens), n(l.conteudoPorEmbalagem), n(l.quantidadeTotal), unid(it), n(l.valorTotal), l.responsavel, l.origem]); });
+    if (R.aba === 'resumo') { linhas.push([]); linhas.push(['SAÍDAS']); }
+  }
+  if (R.aba === 'saidas' || R.aba === 'perdas' || R.aba === 'resumo') {
+    linhas.push(['Data','Item','Lote','Validade','Motivo','Quantidade','Unidade','Valor (custo)','Paciente','Responsável','Observação']);
+    S.movimentos.filter(m => noPeriodo(m.data) && (R.aba !== 'perdas' || MOTIVOS_PERDA.includes(m.motivo))).forEach(m => { const it = item(m.itemId), l = S.lotes.find(x => x.id === m.loteId); linhas.push([fmtData(m.data), nomeItem(it), l ? l.lote : '', l ? fmtData(l.validade) : '', m.motivo, n(m.quantidade), unid(it), l ? n(num(m.quantidade) * custoUnit(l)) : '', m.paciente, m.responsavel, m.obs]); });
+  }
+  const csv = '\ufeff' + linhas.map(r => r.map(q).join(';')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = `estoque_${R.aba}_${hoje()}.csv`; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* =========================================================
+   CADASTROS
+   ========================================================= */
+function renderCadastros() {
+  const itens = S.itens.slice().sort((a,b) => nomeItem(a).localeCompare(nomeItem(b)));
+  const fs = S.farmacias.slice().sort((a,b) => a.nome.localeCompare(b.nome));
+  $('cadastros').innerHTML = `
+  <div class="sec-title"><h2>Cadastros</h2></div>
+  <div class="card"><div class="sec-title"><h3 style="margin:0">Itens</h3><button class="btn gold sm right" onclick="modalItem()">+ Novo item</button></div>
+  ${!itens.length ? '<div class="empty">Cadastre os medicamentos, suplementos e insumos que a clínica controla.</div>' : `<div class="scroll"><table class="tbl"><tr><th>Item</th><th>Categoria</th><th>Controle em</th><th class="n">Estoque mínimo</th><th>Farmácia padrão</th><th>Prazo de entrega</th><th></th></tr>
+  ${itens.map(i => `<tr style="${i.ativo === '0' ? 'opacity:.5' : ''}"><td><b>${esc(nomeItem(i))}</b>${i.ativo === '0' ? ' <span class="pill p-mute">inativo</span>' : ''}</td><td>${esc(i.categoria)}</td><td>${unid(i)}</td><td class="n">${num(i.estoqueMinimo) ? fmtNum(num(i.estoqueMinimo)) + ' ' + unid(i) : '-'}</td><td>${esc((farm(i.farmaciaPadraoId) || {}).nome || '-')}</td><td>${num(i.prazoEntregaDias) || num(i.intervaloEntregaDias) ? `<span class="pill p-warn">próprio: ${num(i.prazoEntregaDias) || '-'} dias</span>` : '<span class="small muted">da farmácia</span>'}</td><td><button class="btn ghost sm" onclick="modalItem('${i.id}')">Editar</button></td></tr>`).join('')}</table></div>`}</div>
+  <div class="card"><div class="sec-title"><h3 style="margin:0">Farmácias e fornecedores</h3><button class="btn gold sm right" onclick="modalFarmacia()">+ Nova farmácia</button></div>
+  ${!fs.length ? '<div class="empty">Cadastre as farmácias com o intervalo de entrega e o prazo médio. Isso alimenta a sugestão de compra.</div>' : `<div class="scroll"><table class="tbl"><tr><th>Nome</th><th class="n">Entrega a cada</th><th class="n">Prazo médio</th><th>Contato</th><th></th></tr>
+  ${fs.map(f => `<tr style="${f.ativo === '0' ? 'opacity:.5' : ''}"><td><b>${esc(f.nome)}</b>${f.cnpj ? `<div class="small muted">CNPJ ${esc(f.cnpj)}</div>` : ''}</td><td class="n">${num(f.intervaloEntregaDias) ? num(f.intervaloEntregaDias) + ' dias' : '<span class="pill p-warn">definir</span>'}</td><td class="n">${num(f.prazoMedioDias) ? num(f.prazoMedioDias) + ' dias' : '<span class="pill p-warn">definir</span>'}</td><td>${esc(f.contato)}</td><td><button class="btn ghost sm" onclick="modalFarmacia('${f.id}')">Editar</button></td></tr>`).join('')}</table></div>`}</div>`;
+}
+
+let MI = null;
+function modalItem(id) {
+  MI = id ? Object.assign({intervaloEntregaDias:'', prazoEntregaDias:''}, item(id), {conteudoPadrao: brCont(item(id)), estoqueMinimo: !item(id).estoqueMinimo ? '' : br(num(item(id).estoqueMinimo))}) : {id:'', substancia:'', apresentacao:'Frasco', unidadeControle:'mg', conteudoPadrao:'', categoria:'Medicamento', farmaciaPadraoId:'', estoqueMinimo:'', apelidos:'', ativo:'1', intervaloEntregaDias:'', prazoEntregaDias:''};
+  desenharModalItem();
+}
+function desenharModalItem() {
+  const fr = MI.apresentacao === 'Frasco';
+  const temLotes = MI.id && S.lotes.some(l => l.itemId === MI.id);
+  const u = fr ? MI.unidadeControle : 'un';
+  abrirModal(`<h3>${MI.id ? 'Editar item' : 'Novo item'}</h3>
+  <div class="grid g2">
+    <div style="grid-column:1/-1"><label>Substância / produto</label><input id="miSub" value="${esc(MI.substancia)}" oninput="MI.substancia=this.value" placeholder="Ex.: Tirzepatida"></div>
+    <div><label>Apresentação</label><select onchange="MI.apresentacao=this.value;if(this.value!=='Frasco'){MI.unidadeControle='un';MI.conteudoPadrao='1'}else if(!['mg','UI','mL'].includes(MI.unidadeControle)){MI.unidadeControle='mg';MI.conteudoPadrao=''}desenharModalItem()" ${temLotes ? 'disabled' : ''}>${APRESENTACOES.map(a => `<option ${a === MI.apresentacao ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
+    <div><label>Categoria</label><select onchange="MI.categoria=this.value">${CATEGORIAS.map(c => `<option ${c === MI.categoria ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+    ${fr ? `<div><label>Controlar entrada e baixa em</label><div class="radio">${['mg','UI','mL'].map(x => `<button class="${MI.unidadeControle === x ? 'on' : ''}" ${temLotes ? 'disabled' : ''} onclick="MI.unidadeControle='${x}';desenharModalItem()">${x}</button>`).join('')}</div></div>
+      <div><label>${MI.unidadeControle} por frasco (padrão)</label><input inputmode="decimal" value="${esc(MI.conteudoPadrao)}" oninput="MI.conteudoPadrao=this.value" placeholder="Ex.: 60"><div class="hint">Pode ser alterado em cada entrada.</div></div>` : '<div style="grid-column:1/-1" class="hint">Controlado em unidades.</div>'}
+    <div><label>Estoque mínimo (${u})</label><input inputmode="decimal" value="${esc(MI.estoqueMinimo)}" oninput="MI.estoqueMinimo=this.value"><div class="hint">Opcional. Abaixo disso, aparece "comprar agora".</div></div>
+    <div><label>Farmácia padrão</label><select onchange="MI.farmaciaPadraoId=this.value">${optsFarmacias(MI.farmaciaPadraoId, 'Nenhuma')}</select></div>
+  </div>
+  <div style="margin-top:14px;padding:12px;border-radius:10px;background:var(--cream)">
+    <b class="small" style="color:var(--navy)">Prazo de entrega próprio deste item (opcional)</b>
+    <div class="hint" style="margin-bottom:8px">Use quando o item demora mais que o normal da farmácia, como Tirzepatida e implantes. Deixe vazio para usar o prazo da farmácia.</div>
+    <div class="grid g2">
+      <div><label>Prazo de entrega (dias)</label><input inputmode="numeric" value="${esc(MI.prazoEntregaDias)}" oninput="MI.prazoEntregaDias=this.value" placeholder="Ex.: 30"><div class="hint">Do pedido até chegar.</div></div>
+      <div><label>Pedido a cada (dias)</label><input inputmode="numeric" value="${esc(MI.intervaloEntregaDias)}" oninput="MI.intervaloEntregaDias=this.value" placeholder="Ex.: 30"><div class="hint">De quanto em quanto tempo esse item é pedido.</div></div>
+    </div>
+  </div>
+  ${temLotes ? '<p class="hint">Apresentação e unidade não podem ser alteradas porque o item já tem entradas.</p>' : ''}
+  ${MI.apelidos ? `<details style="margin-top:10px"><summary>Nomes e códigos reconhecidos (${MI.apelidos.split('|').filter(Boolean).length})</summary><textarea style="margin-top:6px" oninput="MI.apelidos=this.value.split('\\n').map(s=>s.trim()).filter(Boolean).join('|')">${esc(MI.apelidos.split('|').join('\n'))}</textarea><div class="hint">O sistema aprende esses nomes ao importar notas e códigos. Um por linha.</div></details>` : ''}
+  <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-weight:400;color:var(--ink)"><input type="checkbox" style="width:auto" ${MI.ativo !== '0' ? 'checked' : ''} onchange="MI.ativo=this.checked?'1':'0'"> Item ativo</label>
+  <div class="row" style="margin-top:14px"><button class="btn" onclick="salvarItem()">Salvar</button><button class="btn ghost" onclick="fecharModal()">Cancelar</button></div>`);
+}
+async function salvarItem() {
+  if (!MI.substancia.trim()) { toast('Informe a substância.', 1); return; }
+  if (MI.apresentacao === 'Frasco' && !(numBR(MI.conteudoPadrao) > 0)) { toast(`Informe quantos ${MI.unidadeControle} tem cada frasco.`, 1); return; }
+  if (MI.apresentacao !== 'Frasco') { MI.unidadeControle = 'un'; MI.conteudoPadrao = '1'; }
+  MI.substancia = MI.substancia.trim(); MI.conteudoPadrao = String(numBR(MI.conteudoPadrao)); MI.estoqueMinimo = MI.estoqueMinimo === '' ? '' : String(numBR(MI.estoqueMinimo)); MI.prazoEntregaDias = MI.prazoEntregaDias === '' ? '' : String(numBR(MI.prazoEntregaDias)); MI.intervaloEntregaDias = MI.intervaloEntregaDias === '' ? '' : String(numBR(MI.intervaloEntregaDias));
+  const dup = S.itens.find(i => i.id !== MI.id && norm(i.substancia) === norm(MI.substancia) && i.apresentacao === MI.apresentacao && num(i.conteudoPadrao) === num(MI.conteudoPadrao));
+  if (dup && !confirm('Já existe um item igual. Salvar mesmo assim?')) return;
+  const novo = !MI.id; if (novo) MI.id = uid();
+  const salvo = Object.assign({}, MI);
+  fecharModal(); loading(true, 'Salvando...');
+  try {
+    await api('upsert', {table:'Itens', row:salvo});
+    await carregar(); toast('Item salvo.');
+    if (novo && E) { const vazia = E.linhas.find(l => !l.itemId); if (vazia) { vazia.itemId = salvo.id; if (ehFrasco(salvo) && !numBR(vazia.conteudo)) vazia.conteudo = brCont(salvo); } renderEntrada(); }
+  } catch(e) { loading(false); toast(e.message, 1); }
+}
+
+let MF = null;
+function modalFarmacia(id) {
+  MF = id ? Object.assign({}, farm(id)) : {id:'', nome:'', cnpj:'', intervaloEntregaDias:'', prazoMedioDias:'', contato:'', ativo:'1'};
+  abrirModal(`<h3>${MF.id ? 'Editar farmácia' : 'Nova farmácia / fornecedor'}</h3>
+  <div class="grid g2">
+    <div style="grid-column:1/-1"><label>Nome</label><input value="${esc(MF.nome)}" oninput="MF.nome=this.value"></div>
+    <div><label>CNPJ (ajuda a reconhecer as notas)</label><input value="${esc(MF.cnpj)}" oninput="MF.cnpj=this.value"></div>
+    <div><label>Contato / WhatsApp</label><input value="${esc(MF.contato)}" oninput="MF.contato=this.value"></div>
+    <div><label>Realiza entrega a cada (dias)</label><input inputmode="numeric" value="${esc(MF.intervaloEntregaDias)}" oninput="MF.intervaloEntregaDias=this.value" placeholder="Ex.: 15"><div class="hint">De quanto em quanto tempo vocês fazem pedido / recebem.</div></div>
+    <div><label>Prazo médio de entrega (dias)</label><input inputmode="numeric" value="${esc(MF.prazoMedioDias)}" oninput="MF.prazoMedioDias=this.value" placeholder="Ex.: 7"><div class="hint">Do pedido até o produto chegar.</div></div>
+  </div>
+  <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-weight:400;color:var(--ink)"><input type="checkbox" style="width:auto" ${MF.ativo !== '0' ? 'checked' : ''} onchange="MF.ativo=this.checked?'1':'0'"> Ativa</label>
+  <div class="row" style="margin-top:14px"><button class="btn" onclick="salvarFarmacia()">Salvar</button><button class="btn ghost" onclick="fecharModal()">Cancelar</button></div>`);
+}
+async function salvarFarmacia() {
+  if (!MF.nome.trim()) { toast('Informe o nome.', 1); return; }
+  if (!MF.id) MF.id = uid();
+  MF.nome = MF.nome.trim(); MF.cnpj = MF.cnpj.replace(/\D/g, ''); MF.intervaloEntregaDias = MF.intervaloEntregaDias === '' ? '' : String(numBR(MF.intervaloEntregaDias)); MF.prazoMedioDias = MF.prazoMedioDias === '' ? '' : String(numBR(MF.prazoMedioDias));
+  const salvo = Object.assign({}, MF);
+  fecharModal(); loading(true, 'Salvando...');
+  try { await api('upsert', {table:'Farmacias', row:salvo}); await carregar(); toast('Farmácia salva.'); }
+  catch(e) { loading(false); toast(e.message, 1); }
+}
+
+/* =========================================================
+   CONFIGURAÇÕES
+   ========================================================= */
+function renderConfig() {
+  const c = S.config;
+  $('config').innerHTML = `
+  <div class="sec-title"><h2>Configurações</h2></div>
+  <div class="card"><div class="grid g2">
+    <div style="grid-column:1/-1"><label>Nome da clínica</label><input id="cfNome" value="${esc(c.nomeClinica || '')}"></div>
+    <div><label>Estoque de segurança (dias)</label><input id="cfSeg" inputmode="numeric" value="${esc(c.diasSeguranca || '7')}"><div class="hint">Folga extra na sugestão de compra para atrasos e picos de uso.</div></div>
+    <div><label>Avisar vencimento com antecedência de (dias)</label><input id="cfVenc" inputmode="numeric" value="${esc(c.alertaVencimentoDias || '60')}"></div>
+    <div><label>Período para calcular o consumo médio (dias)</label><input id="cfAnal" inputmode="numeric" value="${esc(c.diasAnaliseConsumo || '90')}"></div>
+    <div><label>Responsáveis (separados por vírgula)</label><input id="cfResp" value="${esc(c.responsaveis || '')}" placeholder="Recepção, Enfermagem, Dra. Ana"></div>
+  </div><div class="row" style="margin-top:14px"><button class="btn" onclick="salvarConfig()">Salvar configurações</button></div></div>
+  <div class="card"><h3>Conexão</h3>
+    <p class="small">${conn.demo ? 'Você está no <b>modo demonstração</b>. Os dados ficam só neste navegador.' : 'Conectado à planilha da clínica. O PIN é alterado diretamente na aba Config da planilha.'}</p>
+    <div class="row">${conn.demo ? `<button class="btn ghost sm" onclick="if(confirm('Recriar os dados de demonstração?')){lsDel(LS_DEMO);carregar()}">Recriar demonstração</button>` : ''}<button class="btn ghost sm" onclick="sair()">${conn.demo ? 'Conectar uma planilha' : 'Desconectar'}</button></div>
+  </div>`;
+}
+async function salvarConfig() {
+  const cfg = {nomeClinica:$('cfNome').value.trim(), diasSeguranca:String(numBR($('cfSeg').value)), alertaVencimentoDias:String(numBR($('cfVenc').value)), diasAnaliseConsumo:String(numBR($('cfAnal').value) || 90), responsaveis:$('cfResp').value};
+  loading(true, 'Salvando...');
+  try { await api('saveConfig', {config:cfg}); await carregar(); toast('Configurações salvas.'); }
+  catch(e) { loading(false); toast(e.message, 1); }
+}
+
+/* =========================================================
+   INÍCIO
+   ========================================================= */
+window.addEventListener('afterprint', () => document.querySelectorAll('main section').forEach(s => s.classList.remove('print')));
+(async function iniciar() {
+  const qs = new URLSearchParams(location.search);
+  const salvo = lsGet(LS_CON);
+  if (salvo) { try { conn = JSON.parse(salvo); } catch(e) {} }
+  if (qs.get('api')) { conn.url = qs.get('api'); conn.demo = false; if (!salvo || JSON.parse(salvo).url !== conn.url) conn.pin = ''; }
+  if (qs.has('demo')) { await entrarDemo(); return; }
+  if (conn.demo) { await carregar(); return; }
+  if (conn.url && conn.pin !== undefined) {
+    try { await carregar(); lsSet(LS_CON, JSON.stringify(conn)); return; }
+    catch(e) { if (!$('conexao').classList.contains('on')) mostrarConexao(e.message); return; }
+  }
+  mostrarConexao();
+})();
+</script>
+</body>
+</html>
